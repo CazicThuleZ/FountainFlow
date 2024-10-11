@@ -1,0 +1,33 @@
+{
+    "schema": 1,
+    "description": "Intepret a single line of text as a Fountain screenplay element in the context of the screenplay as a whole.",
+    "execution_settings": {
+      "default": {
+        "max_tokens": 1000,
+        "temperature": 0.0,
+        "top_p": 0.0,
+        "presence_penalty": 0.0,
+        "frequency_penalty": 0.0
+      }
+    },
+    "input_variables": [
+      {
+        "name": "previousLineClassification",
+        "description": "The classification applied to the previous previous line of text.",
+        "default": "",
+        "is_required": true
+      },
+      {
+        "name": "lineUnderReview",
+        "description": "The line of text requiring classification.",
+        "default": "",
+        "is_required": true
+      },
+      {
+        "name": "nextLine",
+        "description": "The line of next text.",
+        "default": "",
+        "is_required": true
+      }            
+    ]  
+  }

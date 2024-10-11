@@ -1,0 +1,19 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": ".NET Core Launch (console)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/src/FountainFlow.Service/bin/Debug/net7.0/FountainFlow.Service.dll",            
+            "args": [],
+            "cwd": "${workspaceFolder}/src/FountainFlow.Service",
+            "stopAtEntry": false,
+            "console": "internalConsole",
+            "env": {
+                "ENVIRONMENT": "Development"
+            }
+        }
+    ]
+}

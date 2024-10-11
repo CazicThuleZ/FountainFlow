@@ -1,0 +1,138 @@
+Fountain is a plain text markup language for screenwriting.
+
+Each line of syntax in a fountain screenplay can be classified as a particular fountain element. A fountain screenplay
+line cannot have more than 1 classification.  When classifying elements, it's crucial to consider the context provided
+ by the previous and next lines. The relationships between consecutive lines often determine the correct classification
+  of elements in Fountain.
+
+<rules>
+
+<BlankLine>
+"Blank Line": No text or punctuation.  
+</BlankLine>
+
+<SceneHeading>
+"Scene Headings": Any line that begins with "INT", "INT.", "EXT", "EXT.", "EST" "EST.", "INT/EXT", "INT./EXT" or "I/E". A Scene Heading
+always has at least one blank line preceding it and one blank line following it.  Any line that begins with a single leading period (.) forces 
+"scene heading" classification.  Lines that begin with multiple periods ("...") are NOT classified as "scene heading".
+wiht multiple periods ().  Scene Headings can optionally be appended with Scene Numbers. Scene numbers are any alphanumerics 
+(plus dashes and periods), wrapped in #.
+<example>
+  INT. HIGH SCHOOL LOCKER ROOM (DAY)
+</example>  
+<example>
+  EXT A DARK WOOD SOMEWHERE IN CROATIA 
+</example>  
+  <example>
+  EXT. AN AIRPORT RUNWAY (NIGHT) #45-1#
+</example>  
+<example>
+  INT HOUSE - DAY #1#
+</example>
+</SceneHeading>
+
+<Character>
+"Character": Any line in upper case that is not a "scene heading".  "Character" will always have a blank line before it and will 
+never have a blank line after it.  Character lines can include “Character Extensions” which are an exception to the upper case rule and 
+are the parenthetical notations that follow a character name on the same line (may be in uppercase or lowercase). Character names must 
+include at least one alphabetical character. “R2D2” works, but “23” does not.  Any line that begins with "@" forces classification as 
+"character".
+<example>
+  CHARLES
+</example>  
+<example>
+  NANCY RIDLEY
+</example>
+<example>
+  ANOUNCER (into microphone)
+</example>
+<example>
+  MOM (O. S.)
+  </example>
+</examples>
+</Character>
+
+<Dialogue>
+"Dialogue": Any text that where {{$previousLineClassification}} is <Character> or <Parenthetical> or <Dialogue> element UNLESS it is a <BlankLine>
+<example>
+  I was almost complete.
+  But the things I owned, ended up owning me.
+</example>
+<example>
+  I coulda been a contender.
+  (sighs).
+  If only you had supported me.
+</example>
+</Dialogue>
+
+<Parenthetical>
+"Parenthetical": Text wrapped in parentheses () that appears on its own line after a Character element or a dialog element. 
+Always starts with "(" and always ends with ")".
+ <example>  
+  (screaming from the rooftop)
+</example>
+ <example>  
+  (takes the lotion and rubs it on its skin)
+</example>
+</Parenthetical>
+
+<DualDialogue>
+"Dual Dialogue": Dual, or simultaneous, dialogue expressed with a caret ^ after the second Character element.
+ <example>
+  BRICK
+  Screw retirement.
+
+  STEEL ^
+  Screw retirement.
+</example>
+</DualDialogue>  
+
+<Action>
+"Action": Any paragraph that doesn't meet criteria for another element. Action can appear between other elements, including between
+ Character and Dialogue lines if separated by blank lines. Action is optionally prefixed with "!", which always forces the
+  classification of the line as action.
+ <example>
+  Alice picked up the magnifying glass and examined the postage stamp with care.  
+</example>
+ <example>
+  We hear a train in the distance coming closer.  As the camera shifts upward we see crows scattering to the wind.
+</example>
+</Action>
+
+<Lyrics>
+"Lyrics": Any line starting with a line with a tilde (~)
+ <example>
+  ~There is a house in New Orleans, they call the rising sun.  
+</example>
+</Lyrics>
+
+<Transition>
+"Transition": Any line that is 1) uppercase, 2) Preceded by and followed by an empty line, 3) Contains the string "TO:"
+ <example>
+  CUT TO: DESCENDING ELEVATOR
+</example>
+</Transition>
+
+<TitlePage>
+"Title Page": A line characterized by key value pairs separated by a colon (key: value).  Keys can have spaces (e. g. Draft date),
+but must end with a colon. Title Pages can span multiple lines, but once the first line that is not a title page line is encountered, no
+other lines can be interpreted as a Title Page line.  Title Pages, if present, always precede any other fountain elements, with the exception
+of a blank line. Title page lines are optional. 
+ <example>
+  Title: _**BRICK & STEEL**_    
+  Credit: Dan Forth
+  Author: Stu Maschwitz
+  Draft date: 1/20/2012 
+</example>
+</TitlePage>
+
+</rules>
+
+Previous line classification: {{$previousLineClassification}}.
+Next line content: {{$nextLine}}.
+Classify the current line: {{$lineUnderReview}}.
+
+Respond only with the classification:
+Fountain Element: [element]
+
+Do NOT include explanations or any other text.
