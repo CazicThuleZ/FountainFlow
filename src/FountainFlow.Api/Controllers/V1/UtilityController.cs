@@ -5,7 +5,8 @@ using Microsoft.AspNetCore.Mvc;
 namespace FountainFlow.Api.Controllers
 {
     [ApiController]
-    [Route("fountainFlow/utility")]
+    [Route("api/v{version:apiVersion}/[controller]")]
+    [ApiVersion("1.0")]
     public class UtilityController : ControllerBase
     {
         private readonly FFDbContext _context;

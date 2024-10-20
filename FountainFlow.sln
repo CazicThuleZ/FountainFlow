@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FountainFlow.Service", "src
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FountainFlow.Api", "src\FountainFlow.Api\FountainFlow.Api.csproj", "{0C42771F-49C3-43EF-B675-A2214C1A00E9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FountainFlowUI", "src\FountainFlow.UI\FountainFlowUI.csproj", "{66D262CC-3F54-485B-97B8-A31D2C1DFADB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,9 +32,14 @@ Global
 		{0C42771F-49C3-43EF-B675-A2214C1A00E9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0C42771F-49C3-43EF-B675-A2214C1A00E9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0C42771F-49C3-43EF-B675-A2214C1A00E9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{66D262CC-3F54-485B-97B8-A31D2C1DFADB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{66D262CC-3F54-485B-97B8-A31D2C1DFADB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{66D262CC-3F54-485B-97B8-A31D2C1DFADB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{66D262CC-3F54-485B-97B8-A31D2C1DFADB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{B22393A6-8BE3-47E2-9D01-AC11199C382E} = {7C925477-C28F-4A66-82E8-48FE23E640DF}
 		{0C42771F-49C3-43EF-B675-A2214C1A00E9} = {7C925477-C28F-4A66-82E8-48FE23E640DF}
+		{66D262CC-3F54-485B-97B8-A31D2C1DFADB} = {7C925477-C28F-4A66-82E8-48FE23E640DF}
 	EndGlobalSection
 EndGlobal
