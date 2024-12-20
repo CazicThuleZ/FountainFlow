@@ -47,6 +47,21 @@ namespace FountainFlow.Api.Controllers
             return Ok(_mapper.Map<ArchetypeBeatReadDto>(archetypeBeat));
         }
 
+        // GET: api/ArchetypeBeats/archetype/{id}
+        [HttpGet("archetype/{id}")]
+        public async Task<ActionResult<List<ArchetypeBeatReadDto>>> GetArchetypeBeatsByArchetypeId(Guid id)
+        {
+            var archetypeBeats = await _ffDbContext.ArchetypeBeats
+                .Where(ab => ab.ArchetypeId == id)
+                .ToListAsync();
+
+            if (!archetypeBeats.Any())
+                return NotFound();
+
+            var archetypeBeatDtos = _mapper.Map<List<ArchetypeBeatReadDto>>(archetypeBeats);
+            return Ok(archetypeBeatDtos);
+        }
+
         // POST: api/ArchetypeBeats
         [HttpPost]
         public async Task<ActionResult<ArchetypeBeatReadDto>> CreateArchetypeBeat(ArchetypeBeatDto archetypeBeatDto)

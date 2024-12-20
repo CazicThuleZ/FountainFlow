@@ -1,0 +1,23 @@
+services:
+  fountainflow-svc:
+    image: quepugmer/fountainflow-svc:latest
+    build: 
+      context: .
+      dockerfile: src/FountainFlow.Api/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+      - ConnectionStrings__DefaultConnection=Server=192.168.1.10:2665;User Id=winslow;Password=zJu@@@T55!;Database=FountainFlow;      
+      - IdentityServiceUrl=http://fountainflow-svc
+    ports:
+      - 6087:80
+  ui:
+    build:
+      context: .
+      dockerfile: src/FountainFlow.UI/Dockerfile
+    environment:
+      - ASPNETCORE_URLS=http://+:80      
+    ports:
+      - "6266:80"      
+volumes:
+  pgdata:

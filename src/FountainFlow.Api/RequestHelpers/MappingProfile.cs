@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using AutoMapper;
 using FountainFlow.Api.DTOs;
 using FountainFlow.Api.Entities;
@@ -9,13 +10,18 @@ public class MappingProfile : Profile
 {
     public MappingProfile()
     {
-        // Map Archetype to ArchetypeReadDto and vice versa
         CreateMap<Archetype, ArchetypeReadDto>()
-            .ForMember(dest => dest.ArchetypeBeatIds, opt => opt.MapFrom(src => src.ArchetypeBeats))
-            .ForMember(dest => dest.ArchetypeGenreIds, opt => opt.MapFrom(src => src.ArchetypeGenres));
+            .ForMember(dest => dest.ArchetypeBeatIds,
+                opt => opt.MapFrom(src => src.ArchetypeBeats.Select(ab => ab.Id)))
+            .ForMember(dest => dest.ArchetypeGenreIds,
+                opt => opt.MapFrom(src => src.ArchetypeGenres.Select(ag => ag.Id)));
 
         CreateMap<ArchetypeDto, Archetype>()
             .ForMember(dest => dest.ArchetypeBeats, opt => opt.Ignore())
             .ForMember(dest => dest.ArchetypeGenres, opt => opt.Ignore());
+
+        CreateMap<ArchetypeBeat, ArchetypeBeatReadDto>();
+
+        CreateMap<ArchetypeGenre, ArchetypeGenreReadDto>();
     }
 }

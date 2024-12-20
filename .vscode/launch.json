@@ -2,11 +2,11 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": ".NET Core Launch (console)",
+            "name": "FountainFlow Service",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/src/FountainFlow.Service/bin/Debug/net7.0/FountainFlow.Service.dll",            
+            "program": "${workspaceFolder}/src/FountainFlow.Service/bin/Debug/net7.0/FountainFlow.Service.dll",
             "args": [],
             "cwd": "${workspaceFolder}/src/FountainFlow.Service",
             "stopAtEntry": false,
@@ -14,6 +14,32 @@
             "env": {
                 "ENVIRONMENT": "Development"
             }
+        },
+        {
+            "name": "FountainFlow UI",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/src/FountainFlow.UI/bin/Debug/net8.0/FountainFlowUI.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/src/FountainFlow.UI",
+            "stopAtEntry": false,
+            "serverReadyAction": {
+                "action": "openExternally",
+                "pattern": "\\bNow listening on:\\s+(https?://\\S+)",
+                "uriFormat": "%s"
+            },
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development"
+            },
+            "sourceFileMap": {
+                "/Views": "${workspaceFolder}/src/FountainFlowUI/Views"
+            }
+        },
+        {
+            "name": ".NET Core Attach",
+            "type": "coreclr",
+            "request": "attach"
         }
     ]
 }

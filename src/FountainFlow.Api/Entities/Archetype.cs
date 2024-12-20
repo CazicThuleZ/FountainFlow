@@ -12,6 +12,10 @@ public class Archetype
 {
     public Guid Id { get; set; }
     public string Domain { get; set; }
+    public string Description { get; set; }
+    public string Architect { get; set; }
+    public string ExternalLink { get; set; }
+    public string Icon { get; set; }
     // Navigation properties
     public ICollection<ArchetypeBeat> ArchetypeBeats { get; set; } = new List<ArchetypeBeat>();
     public ICollection<ArchetypeGenre> ArchetypeGenres { get; set; } = new List<ArchetypeGenre>();

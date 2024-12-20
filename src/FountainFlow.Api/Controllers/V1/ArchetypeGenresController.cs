@@ -47,6 +47,21 @@ namespace FountainFlow.Api.Controllers
             return Ok(_mapper.Map<ArchetypeGenreReadDto>(archetypeGenre));
         }
 
+        // GET: api/ArchetypeGenres/{id}
+        [HttpGet("archetype/{id}")]
+        public async Task<ActionResult<ArchetypeGenreReadDto>> GetArchetypeGenresByArchetypeId(Guid id)
+        {
+            var archetypeGenres = await _ffDbContext.ArchetypeGenres
+                .Where(ag => ag.ArchetypeId == id)
+                .ToListAsync();
+
+            if (!archetypeGenres.Any())
+                return NotFound();
+
+            var archetypeGenreDtos = _mapper.Map<List<ArchetypeGenreReadDto>>(archetypeGenres);
+            return Ok(archetypeGenreDtos);
+        }        
+
         // POST: api/ArchetypeGenres
         [HttpPost]
         public async Task<ActionResult<ArchetypeGenreReadDto>> CreateArchetypeGenre(ArchetypeGenreDto archetypeGenreDto)

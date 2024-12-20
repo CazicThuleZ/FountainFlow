@@ -11,6 +11,7 @@ public class ArchetypeBeat
     public int Sequence { get; set; }
     public string Name { get; set; }
     public string Description { get; set; }
+    public string Icon { get; set; }    
     public int PercentOfStory { get; set; }
     public Archetype Archetype { get; set; }
     public DateTime CreatedUTC { get; set; }
