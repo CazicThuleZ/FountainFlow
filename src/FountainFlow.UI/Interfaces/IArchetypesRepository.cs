@@ -9,4 +9,6 @@ public interface IArchetypesRepository
     Task<List<ArchetypeGenreDto>> GetArchetypeGenresByArchetypeIdIdAsync(Guid id);
     Task<List<ArchetypeBeatDto>> GetArchetypeBeatsByArchetypeIdIdAsync(Guid id);
     Task<bool> DeleteArchetypeAsync(Guid id);
+    Task<ArchetypeDto> CreateArchetypeAsync(ArchetypeDto archetypeDto);
+    Task<ArchetypeGenreDto> CreateArchetypeGenreAsync(ArchetypeGenreDto archetypeGenreDto);
 }

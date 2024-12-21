@@ -121,15 +121,17 @@ public class ArchetypesRepository : IArchetypesRepository
             _logger.LogInformation("Attempting to fetch archetype genres from API at {ApiUrl}", $"{_apiBaseUrl}/api/v1.0/ArchetypeGenres/Archetype/{archetypeId}");
             using var response = await _httpClient.GetAsync($"{_apiBaseUrl}/api/v1.0/ArchetypeGenres/Archetype/{archetypeId}");
 
-            response.EnsureSuccessStatusCode();
-
-            var content = await response.Content.ReadAsStringAsync();
-
+            // Check for 404 first, before ensuring success status
             if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
                 _logger.LogInformation("No genres found for archetype {ArchetypeId}", archetypeId);
                 return new List<ArchetypeGenreDto>();
             }
+
+            // Now check for other error status codes
+            response.EnsureSuccessStatusCode();
+
+            var content = await response.Content.ReadAsStringAsync();
 
             if (string.IsNullOrEmpty(content))
             {
@@ -139,9 +141,9 @@ public class ArchetypesRepository : IArchetypesRepository
 
             var archetypeGenres = await response.Content.ReadFromJsonAsync<List<ArchetypeGenreDto>>();
 
-            if (!archetypeGenres.Any())
+            if (archetypeGenres == null || !archetypeGenres.Any())
             {
-                _logger.LogWarning("Failed to deserialize archetype genres response");
+                _logger.LogWarning("No genres found in response");
                 return new List<ArchetypeGenreDto>();
             }
 
@@ -172,6 +174,12 @@ public class ArchetypesRepository : IArchetypesRepository
             _logger.LogInformation("Attempting to fetch archetype beatss from API at {ApiUrl}", $"{_apiBaseUrl}/api/v1.0/ArchetypeBeats/Archetype/{archetypeId}");
 
             using var response = await _httpClient.GetAsync($"{_apiBaseUrl}/api/v1.0/ArchetypeBeats/Archetype/{archetypeId}");
+
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                _logger.LogInformation("No genres found for archetype {ArchetypeId}", archetypeId);
+                return new List<ArchetypeBeatDto>();
+            }
 
             response.EnsureSuccessStatusCode();
 
@@ -218,35 +226,123 @@ public class ArchetypesRepository : IArchetypesRepository
 
     public async Task<bool> DeleteArchetypeAsync(Guid id)
     {
-        return true;
-        // var archetypeId = id.ToString();
-        // try
-        // {
-        //     _logger.LogInformation("Attempting to delete archetype with ID {ArchetypeId}", archetypeId);
+        var archetypeId = id.ToString();
+        try
+        {
+            _logger.LogInformation("Attempting to delete archetype with ID {ArchetypeId}", archetypeId);
 
-        //     using var response = await _httpClient.DeleteAsync($"{_apiBaseUrl}/api/v1.0/Archetypes/{archetypeId}");
+            using var response = await _httpClient.DeleteAsync($"{_apiBaseUrl}/api/v1.0/Archetypes/{archetypeId}");
 
-        //     if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
-        //     {
-        //         _logger.LogWarning("Archetype with ID {ArchetypeId} not found", archetypeId);
-        //         return false;
-        //     }
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                _logger.LogWarning("Archetype with ID {ArchetypeId} not found", archetypeId);
+                return false;
+            }
 
-        //     response.EnsureSuccessStatusCode();
+            response.EnsureSuccessStatusCode();
 
-        //     // API returns NoContent (204) on successful deletion
-        //     return response.StatusCode == System.Net.HttpStatusCode.NoContent;
-        // }
-        // catch (HttpRequestException ex)
-        // {
-        //     _logger.LogError(ex, "HTTP request failed while deleting archetype. Status code: {StatusCode}",
-        //         ex.StatusCode);
-        //     throw new RepositoryException($"Failed to delete archetype {archetypeId}", ex);
-        // }
-        // catch (Exception ex)
-        // {
-        //     _logger.LogError(ex, "Unexpected error occurred while deleting archetype");
-        //     throw new RepositoryException($"An unexpected error occurred while deleting archetype {archetypeId}", ex);
-        // }
+            // API returns NoContent (204) on successful deletion
+            return response.StatusCode == System.Net.HttpStatusCode.NoContent;
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "HTTP request failed while deleting archetype. Status code: {StatusCode}",
+                ex.StatusCode);
+            throw new RepositoryException($"Failed to delete archetype {archetypeId}", ex);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error occurred while deleting archetype");
+            throw new RepositoryException($"An unexpected error occurred while deleting archetype {archetypeId}", ex);
+        }
+    }
+
+    public async Task<ArchetypeDto> CreateArchetypeAsync(ArchetypeDto archetypeDto)
+    {
+        try
+        {
+            _logger.LogInformation("Attempting to create new archetype with domain: {Domain}", archetypeDto.Domain);
+
+            using var response = await _httpClient.PostAsJsonAsync($"{_apiBaseUrl}/api/v1.0/Archetypes", archetypeDto);
+
+            response.EnsureSuccessStatusCode();
+
+            var content = await response.Content.ReadAsStringAsync();
+
+            if (string.IsNullOrEmpty(content))
+            {
+                _logger.LogWarning("API returned empty content after creating archetype");
+                return new ArchetypeDto();
+            }
+
+            var createdArchetype = await response.Content.ReadFromJsonAsync<ArchetypeDto>();
+
+            if (createdArchetype == null)
+            {
+                _logger.LogWarning("Failed to deserialize created archetype response");
+                return new ArchetypeDto();
+            }
+
+            return createdArchetype;
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "HTTP request failed while creating archetype. Status code: {StatusCode}",
+                ex.StatusCode);
+            throw new RepositoryException("Failed to create archetype", ex);
+        }
+        catch (JsonException ex)
+        {
+            _logger.LogError(ex, "Failed to deserialize created archetype response");
+            throw new RepositoryException("Failed to parse created archetype data from the API", ex);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error occurred while creating archetype");
+            throw new RepositoryException("An unexpected error occurred while creating the archetype", ex);
+        }
+    }
+    public async Task<ArchetypeGenreDto> CreateArchetypeGenreAsync(ArchetypeGenreDto archetypeGenreDto)
+    {
+        try
+        {
+            _logger.LogInformation("Attempting to create new archetype genre for archetype: {ArchetypeId}",
+                archetypeGenreDto.ArchetypeId);
+
+            using var response = await _httpClient.PostAsJsonAsync(
+                $"{_apiBaseUrl}/api/v1.0/ArchetypeGenres",
+                archetypeGenreDto);
+
+            response.EnsureSuccessStatusCode();
+
+            var content = await response.Content.ReadAsStringAsync();
+
+            if (string.IsNullOrEmpty(content))
+            {
+                _logger.LogWarning("API returned empty content after creating archetype genre");
+                return new ArchetypeGenreDto();
+            }
+
+            var createdGenre = await response.Content.ReadFromJsonAsync<ArchetypeGenreDto>();
+
+            if (createdGenre == null)
+            {
+                _logger.LogWarning("Failed to deserialize created archetype genre response");
+                return new ArchetypeGenreDto();
+            }
+
+            return createdGenre;
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "HTTP request failed while creating archetype genre. Status code: {StatusCode}",
+                ex.StatusCode);
+            throw new RepositoryException("Failed to create archetype genre", ex);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error occurred while creating archetype genre");
+            throw new RepositoryException("An unexpected error occurred while creating the archetype genre", ex);
+        }
     }
 }

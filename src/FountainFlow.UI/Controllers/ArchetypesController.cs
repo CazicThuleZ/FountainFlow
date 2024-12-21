@@ -1,4 +1,5 @@
 using FountainFlow.UI.Models;
+using FountainFlowUI.DTOs;
 using FountainFlowUI.Interfaces;
 using FountainFlowUI.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -169,6 +170,117 @@ public class ArchetypesController : Controller
             {
                 Message = "Unable to delete archetype at this time. Please try again later."
             });
+        }
+    }
+
+    [HttpGet]
+    public IActionResult CreateArchetype()
+    {
+        // Return a partial view for the create form
+        return PartialView("_CreateArchetypePartial", new ArchetypeViewModel());
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> CreateArchetype([FromBody] ArchetypeViewModel model)
+    {
+        _logger.LogInformation("Received model: {@Model}", model);
+
+        try
+        {
+            if (!ModelState.IsValid)
+            {
+                _logger.LogWarning("Model validation failed: {@ModelState}", ModelState);
+                return BadRequest(ModelState);
+            }
+
+            _logger.LogInformation("Creating new archetype with domain: {Domain}", model.Domain);
+
+            // Map view model to DTO
+            var archetypeDto = new ArchetypeDto
+            {
+                Domain = model.Domain,
+                Description = model.Description,
+                Architect = model.Architect,
+                ExternalLink = model.ExternalLink,
+                Icon = model.Icon,
+                ArchetypeBeatIds = model.ArchetypeBeatIds ?? new List<Guid>(),
+                ArchetypeGenreIds = model.ArchetypeGenreIds ?? new List<Guid>()
+            };
+
+            var result = await _archetypesRepository.CreateArchetypeAsync(archetypeDto);
+
+            if (result == null)
+            {
+                _logger.LogWarning("Failed to create archetype");
+                return BadRequest("Failed to create archetype");
+            }
+
+            // Map the created archetype back to a view model
+            var createdModel = new ArchetypeViewModel
+            {
+                Id = result.Id,
+                Domain = result.Domain,
+                Description = result.Description,
+                Architect = result.Architect,
+                ExternalLink = result.ExternalLink,
+                Icon = result.Icon,
+                ArchetypeBeatIds = result.ArchetypeBeatIds,
+                ArchetypeGenreIds = result.ArchetypeGenreIds,
+                Beats = new List<BeatViewModel>(),
+                Genres = new List<GenreViewModel>()
+            };
+
+            return Json(createdModel);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while creating archetype");
+            return BadRequest("Unable to create archetype at this time. Please try again later.");
+        }
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> UploadIcon(IFormFile file)
+    {
+        if (file == null || file.Length == 0)
+            return BadRequest("No file uploaded");
+
+        try
+        {
+            // Generate a unique filename
+            var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+            var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Images", fileName);
+
+            // Ensure directory exists
+            Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Images"));
+
+            // Save the file
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            return Json(new { fileName = fileName });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error uploading icon");
+            return BadRequest("Failed to upload file");
+        }
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> CreateGenre(Guid archetypeId, ArchetypeGenreDto genreDto)
+    {
+        try
+        {
+            genreDto.ArchetypeId = archetypeId;
+            var result = await _archetypesRepository.CreateArchetypeGenreAsync(genreDto);
+            return Json(new { success = true, data = result });
+        }
+        catch (Exception ex)
+        {
+            return Json(new { success = false, message = ex.Message });
         }
     }
 }

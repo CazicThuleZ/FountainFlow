@@ -3,18 +3,31 @@
 
 <div class="ibox">
     <div class="ibox-content">
+        <!-- Common header section -->
+        <div class="row mb-4">
+            <div class="col-lg-4 text-center">
+                <img src="@Url.Content($"~/Images/{@Model.Icon}")" alt="@Model.Domain structure diagram"
+                    class="img-fluid rounded-circle mb-3" style="max-width: 150px;">
+                <h2>@Model.Domain</h2>
+            </div>
+            <div class="col-lg-8">
+                <h3>Description</h3>
+                <p class="lead">
+                    @Model.Description
+                </p>
+            </div>
+        </div>
+
         <ul class="nav nav-tabs" role="tablist">
-            <!-- Tab headers -->
             <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="story-beats-tab" data-bs-toggle="tab"
-                    data-bs-target="#story-beats" type="button" role="tab" aria-controls="story-beats"
-                    aria-selected="true">
+                <button class="nav-link active" id="story-beats-tab" data-bs-toggle="tab" data-bs-target="#story-beats"
+                    type="button" role="tab" aria-controls="story-beats" aria-selected="true">
                     <i class="fas fa-book-open me-2"></i>Story Beats
                 </button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="genre-tab" data-bs-toggle="tab" data-bs-target="#genre"
-                    type="button" role="tab" aria-controls="genre" aria-selected="false">
+                <button class="nav-link" id="genre-tab" data-bs-toggle="tab" data-bs-target="#genre" type="button"
+                    role="tab" aria-controls="genre" aria-selected="false">
                     <i class="fas fa-theater-masks me-2"></i>Genre
                 </button>
             </li>
@@ -23,43 +36,29 @@
         <div class="tab-content mt-3">
             <!-- Story Beats Tab -->
             <div class="tab-pane fade show active" id="story-beats" role="tabpanel" aria-labelledby="story-beats-tab">
-                <div class="archetype-detail">
-                    <div class="row mb-4">
-                        <div class="col-lg-4 text-center">
-                            <img src="@Url.Content($"~/Images/{@Model.Icon}")" alt="@Model.Domain structure diagram"
-                                class="img-fluid rounded-circle mb-3" style="max-width: 150px;">
-                            <h2>@Model.Domain</h2>
-                        </div>
-                        <div class="col-lg-8">
-                            <h3>Description</h3>
-                            <p class="lead">
-                                @Model.Description
-                            </p>
-                            <button type="button" class="btn btn-primary">
-                                <i class="fa fa-edit me-2"></i>Edit Structure
-                            </button>
-                        </div>
-                        <div class="client-detail">
-                            <div class="full-height-scroll">
-                                <hr />
-                                <strong>Beat / Sequence</strong>
-                                <div id="vertical-timeline" class="vertical-container dark-timeline">
-                                    @foreach (var beat in @Model.Beats)
-                                    {
-                                        <div class="vertical-timeline-block">
-                                            <div class="vertical-timeline-icon gray-bg">
-                                                <i class="fa fa-coffee"></i>
-                                            </div>
-                                            <div class="vertical-timeline-content">
-                                                <p>
-                                                    @beat.Name
-                                                </p>
-                                                <span class="vertical-date small text-muted">@beat.Description</span>
-                                            </div>
-                                        </div>
-                                    }
+                <div class="text-center mb-4">
+                    <button title="Edit Structure" type="button" class="btn btn-primary">
+                        <i class="fa fa-edit me-2"></i>Edit Structure
+                    </button>
+                </div>
+                <div class="client-detail">
+                    <div class="full-height-scroll">
+                        <strong>Beat / Sequence</strong>
+                        <div id="vertical-timeline" class="vertical-container dark-timeline">
+                            @foreach (var beat in @Model.Beats)
+                            {
+                                <div class="vertical-timeline-block">
+                                    <div class="vertical-timeline-icon gray-bg">
+                                        <i class="fa fa-coffee"></i>
+                                    </div>
+                                    <div class="vertical-timeline-content">
+                                        <p>
+                                            @beat.Name
+                                        </p>
+                                        <span class="vertical-date small text-muted">@beat.Description</span>
+                                    </div>
                                 </div>
-                            </div>
+                            }
                         </div>
                     </div>
                 </div>
@@ -71,41 +70,36 @@
                         <button title="Create new cluster" class="btn btn-primary btn-sm">
                             <i class="fa fa-plus"></i> <span class="bold">Add New Genre</span>
                         </button>
-                        @foreach (var genre in Model.Genres)
-                        {
-                            <div class="faq-item">
-                                <div class="row">
-                                    <div class="col-md-7">
-                                        <a data-bs-toggle="collapse" href="#genre-@genre.Id" class="faq-question">@genre.Name</a>
-                                        <small>Added by <strong>@Model.Architect</strong> <i class="fa fa-clock-o"></i> <!-- Add date if available --></small>
+                    </div>
+                    @foreach (var genre in Model.Genres)
+                    {
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <div class="ibox">
+                                    <div class="ibox-title  bg-light">
+                                        <h5><i class="fas fa-film me-2"></i> <small class="m-l-sm">@genre.Name</small></h5>
                                     </div>
-                                    <div class="col-md-3">
-                                        <span class="small font-bold">Variations</span>
-                                        <div class="tag-list">
-                                            @* @foreach (var variation in genre.Variations)
-                                            {
-                                                <span class="tag-item">@variation</span>
-                                            } *@
-                                        </div>
-                                    </div>
-                                    <div class="col-md-2 text-right">
-                                        <span class="small font-bold">Rank</span><br />
-                                        <!-- Replace with actual rank if available -->
-                                        1
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-lg-12">
-                                        <div id="genre-@genre.Id" class="collapse faq-answer">
-                                            <p>
-                                                @genre.Description
-                                            </p>
+                                    <div class="ibox-content">
+                                        <p class="text-start">
+                                            @genre.Description
+                                        </p>
+                                        <div class="hr-line-dashed"></div>
+                                        <div class="btn-group">
+                                            <button type="button" class="btn btn-white btn-xs" title="Edit Genre">
+                                                <i class="fa fa-pencil me-1"></i>Edit
+                                            </button>
+                                            <button type="button" class="btn btn-white btn-xs" title="Clone Genre">
+                                                <i class="fa fa-copy me-1"></i>Clone
+                                            </button>
+                                            <button type="button" class="btn btn-white btn-xs" title="Remove Genre">
+                                                <i class="fa fa-link me-1"></i>Remove
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        }
-                    </div>
+                        </div>
+                    }
                 </div>
             </div>
         </div>
