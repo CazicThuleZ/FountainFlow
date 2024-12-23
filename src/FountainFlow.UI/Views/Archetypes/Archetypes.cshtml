@@ -110,11 +110,6 @@
         <script>
             Dropzone.autoDiscover = false;
 
-            // Disable SweetAlert2 lockdown
-            window.Swal = Swal.mixin({
-                lockdownEnabled: false
-            });
-
             $(document).ready(function () {
                 console.log('Document ready');
                 var getArchetypeDetailsUrl = '@Url.Action("GetArchetypeDetails", "Archetypes")';
@@ -155,8 +150,8 @@
                                 response: xhr.responseText
                             });
                             $('#details-container').html(`<div class="alert alert-danger">
-                                                                                                                Error loading details: ${status} - ${error}
-                                                                                                            </div>`);
+                                                                                                                                                                                    Error loading details: ${status} - ${error}
+                                                                                                                                                                                </div>`);
                         }
                     });
                 }
@@ -180,17 +175,6 @@
                         cancelButtonText: 'Cancel'
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            // Show loading state
-                            Swal.fire({
-                                title: 'Deleting...',
-                                text: 'Please wait while we delete the archetype.',
-                                allowOutsideClick: false,
-                                showConfirmButton: false,
-                                didOpen: () => {
-                                    Swal.showLoading();
-                                }
-                            });
-
                             // Perform delete
                             $.ajax({
                                 url: deleteArchetypeUrl + '?id=' + archetypeId,
@@ -211,23 +195,12 @@
                                             }
                                         }
 
-                                        // Show success message
-                                        Swal.fire({
-                                            title: 'Deleted!',
-                                            text: `The archetype "${archetypeName}" has been deleted.`,
-                                            icon: 'success',
-                                            confirmButtonColor: '#3085d6'
-                                        });
+                                        showToast('Success', `The archetype "${archetypeName}" has been deleted.`, 'success');
+
                                     });
                                 },
                                 error: function (xhr, status, error) {
-                                    // Show error message
-                                    Swal.fire({
-                                        title: 'Error!',
-                                        text: 'Failed to delete archetype: ' + (xhr.responseText || error),
-                                        icon: 'error',
-                                        confirmButtonColor: '#3085d6'
-                                    });
+                                    showToast('Error', `Failed to delete "${archetypeName} :  " ` + errorMessage, 'success');
                                     console.error('Delete error:', xhr.status, error);
                                 }
                             });
@@ -275,7 +248,7 @@
                                                     <tr class="clickable-row" data-id="${result.id}" style="cursor: pointer;">
                                                         <td>
                                                             <img src="@Url.Content("~/Images/")${result.icon}" alt="${result.domain}"
-                                                                class="rounded-circle" width="48" height="48">
+                                                            class="rounded-circle" width="48" height="48">
                                                         </td>
                                                         <td>${result.domain}</td>
                                                         <td>${result.architect}</td>
@@ -299,13 +272,7 @@
                             // Load details for the new archetype
                             loadArchetypeDetails(result.id);
 
-                            // Show success message
-                            Swal.fire({
-                                title: 'Success!',
-                                text: 'Archetype has been created successfully.',
-                                icon: 'success',
-                                confirmButtonColor: '#3085d6'
-                            });
+                            showToast('Success', 'Archetype has been created successfully.', 'success');
 
                             // Reset form
                             $('#createArchetypeForm')[0].reset();
@@ -319,13 +286,7 @@
                                     input.siblings('.invalid-feedback').text(xhr.responseJSON[key].join(' '));
                                 });
                             } else {
-                                // Show error message
-                                Swal.fire({
-                                    title: 'Error!',
-                                    text: 'Failed to create archetype: ' + (xhr.responseText || error),
-                                    icon: 'error',
-                                    confirmButtonColor: '#3085d6'
-                                });
+                                showToast('Error', 'Failed to create archetype: ' + (xhr.responseText || error), 'error');
                             }
                         },
                         complete: function () {
@@ -364,29 +325,11 @@
                             // Store the uploaded file name in the hidden input
                             $('#Icon').val(response.fileName);
 
-                            // Show success message
-                            Swal.fire({
-                                title: 'Success!',
-                                text: 'Icon uploaded successfully',
-                                icon: 'success',
-                                toast: true,
-                                position: 'top-end',
-                                showConfirmButton: false,
-                                timer: 3000
-                            });
+                            showToast('Success', 'Icon uploaded successfully', 'success');
                         });
 
                         this.on("error", function (file, errorMessage) {
-                            // Show error message
-                            Swal.fire({
-                                title: 'Error!',
-                                text: 'Failed to upload icon: ' + errorMessage,
-                                icon: 'error',
-                                toast: true,
-                                position: 'top-end',
-                                showConfirmButton: false,
-                                timer: 3000
-                            });
+                            showToast('Error', 'Failed to upload icon: ' + errorMessage, 'error');
                         });
 
                         this.on("removedfile", function (file) {
@@ -449,12 +392,7 @@
                                         $('#genre-tab').tab('show');
                                     }, 500);
 
-                                    Swal.fire({
-                                        title: 'Success!',
-                                        text: 'Genre has been added successfully.',
-                                        icon: 'success',
-                                        confirmButtonColor: '#3085d6'
-                                    });
+                                    showToast('Success', 'Genre added successfully', 'success');
 
                                     // Reset the form
                                     $('#createGenreForm')[0].reset();
@@ -462,27 +400,90 @@
                                 } else {
                                     $('#createGenreModal').modal('hide');
                                     setTimeout(function () {
-                                        Swal.fire({
-                                            title: 'Error!',
-                                            text: 'Failed to create genre: ' + response.message,
-                                            icon: 'error',
-                                            confirmButtonColor: '#3085d6'
-                                        });
+                                        showToast('Error', 'Failed to create genre: ' + response.message, 'error');
                                     }, 500);
                                 }
                             },
                             error: function (xhr, status, error) {
                                 $('#createGenreModal').modal('hide');
                                 setTimeout(function () {
-                                    Swal.fire({
-                                        title: 'Error!',
-                                        text: 'Failed to create genre: ' + error,
-                                        icon: 'error',
-                                        confirmButtonColor: '#3085d6'
-                                    });
+                                    showToast('Error', 'Failed to create genre: ' + response.message, 'error');
                                 }, 500);
                             }
                         });
+                    });
+
+                    $('#genre').on('click', '.remove-genre-btn', function (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+
+                        const genreId = $(this).data('genre-id');
+                        const genreName = $(this).data('genre-name');
+
+                        Swal.fire({
+                            title: 'Are you sure?',
+                            text: `You are about to remove "${genreName}". This action cannot be undone.`,
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonColor: '#d33',
+                            cancelButtonColor: '#3085d6',
+                            confirmButtonText: 'Yes, remove it!',
+                            cancelButtonText: 'Cancel'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                
+                                $.ajax({
+                                    url: '@Url.Action("DeleteGenre", "Archetypes")',
+                                    type: 'DELETE',
+                                    data: { id: genreId },
+                                    success: function (result) {
+                                        if (result.success) {
+                                            const currentArchetypeId = $('#ArchetypeId').val();
+                                            loadArchetypeDetails(currentArchetypeId);
+                                            setTimeout(function () {
+                                                $('#genre-tab').tab('show');
+                                            }, 500);
+                                            showToast('Success', `Genre "${genreName}" has been removed.`, 'success');
+                                        } else {
+                                            showToast('Error', 'Failed to remove genre: ' + (result.message || 'Unknown error'), 'error');
+                                        }
+                                    },
+                                    error: function (xhr, status, error) {
+                                        showToast('Error', 'Failed to remove genre: ' + error, 'error');
+                                    }
+                                });
+                            }
+                        });
+                    });
+
+                }
+
+                function showToast(title, message, type = 'success') {
+                    const toastId = 'toast-' + Date.now();
+                    const backgroundColor = type === 'success' ? 'bg-success' : 'bg-danger';
+                    const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+
+                    const toastHtml = `
+                                                                            <div id="${toastId}" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+                                                                                <div class="toast-header ${backgroundColor} text-white">
+                                                                                    <i class="fas ${icon} me-2"></i>
+                                                                                    <strong class="me-auto">${title}</strong>
+                                                                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+                                                                                </div>
+                                                                                <div class="toast-body">
+                                                                                    ${message}
+                                                                                </div>
+                                                                            </div>
+                                                                        `;
+
+                    $('.toast-container').append(toastHtml);
+                    const toastElement = document.getElementById(toastId);
+                    const toast = new bootstrap.Toast(toastElement, { delay: 3000 });
+                    toast.show();
+
+                    // Remove toast element after it's hidden
+                    toastElement.addEventListener('hidden.bs.toast', function () {
+                        $(this).remove();
                     });
                 }
             });

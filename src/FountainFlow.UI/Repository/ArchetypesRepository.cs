@@ -346,4 +346,35 @@ public class ArchetypesRepository : IArchetypesRepository
             throw new RepositoryException("An unexpected error occurred while creating the archetype genre", ex);
         }
     }
+
+    public async Task<bool> DeleteArchetypeGenreAsync(Guid id)
+    {
+        var genreId = id.ToString();
+        try
+        {
+            _logger.LogInformation("Attempting to delete archetype genre with ID {GenreId}", genreId);
+
+            using var response = await _httpClient.DeleteAsync($"{_apiBaseUrl}/api/v1.0/ArchetypeGenres/{genreId}");
+
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                _logger.LogWarning("Archetype genre with ID {GenreId} not found", genreId);
+                return false;
+            }
+
+            response.EnsureSuccessStatusCode();
+            return response.StatusCode == System.Net.HttpStatusCode.NoContent;
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "HTTP request failed while deleting archetype genre. Status code: {StatusCode}",
+                ex.StatusCode);
+            throw new RepositoryException($"Failed to delete archetype genre {genreId}", ex);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error occurred while deleting archetype genre");
+            throw new RepositoryException($"An unexpected error occurred while deleting archetype genre {genreId}", ex);
+        }
+    }
 }

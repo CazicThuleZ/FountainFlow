@@ -21,7 +21,13 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.ArchetypeGenres, opt => opt.Ignore());
 
         CreateMap<ArchetypeBeat, ArchetypeBeatReadDto>();
+        CreateMap<ArchetypeBeatDto, ArchetypeBeat>()
+            .ForMember(dest => dest.CreatedUTC, opt => opt.Ignore())
+            .ForMember(dest => dest.UpdatedUTC, opt => opt.Ignore());
 
         CreateMap<ArchetypeGenre, ArchetypeGenreReadDto>();
+        CreateMap<ArchetypeGenreDto, ArchetypeGenre>()
+            .ForMember(dest => dest.CreatedUTC, opt => opt.Ignore())
+            .ForMember(dest => dest.UpdatedUTC, opt => opt.Ignore());
     }
 }

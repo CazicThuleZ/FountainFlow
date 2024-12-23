@@ -155,7 +155,7 @@ public class ArchetypesController : Controller
         }
     }
 
-    [HttpDelete]
+    [HttpDelete("DeleteArchetype")]
     public async Task<IActionResult> DeleteArchetype(Guid id)
     {
         try
@@ -285,6 +285,25 @@ public class ArchetypesController : Controller
         {
             _logger.LogError(ex, "Error creating genre: {Message}", ex.Message);
             return Json(new { success = false, message = ex.Message });
+        }
+    }
+
+    [HttpDelete("DeleteGenre")]
+    public async Task<IActionResult> DeleteGenre(Guid id)
+    {
+        try
+        {
+            var result = await _archetypesRepository.DeleteArchetypeGenreAsync(id);
+            return Json(new { success = result });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while deleting genre");
+            return Json(new
+            {
+                success = false,
+                message = "Unable to delete genre at this time. Please try again later."
+            });
         }
     }
 }
