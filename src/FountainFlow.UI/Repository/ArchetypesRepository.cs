@@ -306,6 +306,7 @@ public class ArchetypesRepository : IArchetypesRepository
     {
         try
         {
+            archetypeGenreDto.Id = Guid.NewGuid();
             _logger.LogInformation("Attempting to create new archetype genre for archetype: {ArchetypeId}",
                 archetypeGenreDto.ArchetypeId);
 

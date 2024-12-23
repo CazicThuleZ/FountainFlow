@@ -67,7 +67,7 @@
             <div class="tab-pane fade" id="genre" role="tabpanel" aria-labelledby="genre-tab">
                 <div class="ibox-content m-b-sm border-bottom">
                     <div class="text-center p-lg">
-                        <button title="Create new cluster" class="btn btn-primary btn-sm">
+                        <button id="addGenreBtn" title="Create new genre" class="btn btn-primary btn-sm">
                             <i class="fa fa-plus"></i> <span class="bold">Add New Genre</span>
                         </button>
                     </div>
@@ -105,3 +105,5 @@
         </div>
     </div>
 </div>
+
+@await Html.PartialAsync("_CreateGenrePartial", new GenreViewModel { ArchetypeId = Model.Id })

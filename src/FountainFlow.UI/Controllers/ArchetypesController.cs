@@ -64,7 +64,7 @@ public class ArchetypesController : Controller
                         Id = genre.Id,
                         Name = genre.Name,
                         Description = genre.Description,
-
+                        ArchetypeId = archetype.Id
                     }));
                 }
 
@@ -74,7 +74,8 @@ public class ArchetypesController : Controller
                     {
                         Id = beat.Id,
                         Name = beat.Name,
-                        Description = beat.Description
+                        Description = beat.Description,
+                        ArchetypeId = archetype.Id
                     }));
                 }
             }
@@ -131,13 +132,15 @@ public class ArchetypesController : Controller
                 Id = genre.Id,
                 Name = genre.Name,
                 Description = genre.Description,
+                ArchetypeId = model.Id
             }));
 
             model.Beats.AddRange(beats.Select(beat => new BeatViewModel
             {
                 Id = beat.Id,
                 Name = beat.Name,
-                Description = beat.Description
+                Description = beat.Description,
+                ArchetypeId = model.Id
             }));
 
             return PartialView("_ArchetypeDetailsPartial", model);
@@ -270,16 +273,17 @@ public class ArchetypesController : Controller
     }
 
     [HttpPost]
-    public async Task<IActionResult> CreateGenre(Guid archetypeId, ArchetypeGenreDto genreDto)
+    public async Task<IActionResult> CreateGenre([FromBody] ArchetypeGenreDto genreDto)
     {
         try
         {
-            genreDto.ArchetypeId = archetypeId;
+            _logger.LogInformation("XReceived genre creation request: {@GenreDto}", genreDto);
             var result = await _archetypesRepository.CreateArchetypeGenreAsync(genreDto);
             return Json(new { success = true, data = result });
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Error creating genre: {Message}", ex.Message);
             return Json(new { success = false, message = ex.Message });
         }
     }

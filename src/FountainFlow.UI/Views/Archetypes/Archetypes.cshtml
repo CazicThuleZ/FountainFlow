@@ -99,7 +99,6 @@
 
     @await Html.PartialAsync("_CreateArchetypePartial", new ArchetypeViewModel())
 
-
     @section Scripts {
         <script>
             // Initialize tooltips
@@ -133,7 +132,7 @@
                         data: { id: archetypeId },
                         method: 'GET',
                         success: function (data) {
-                            console.log('Success response:', data);
+                            //console.log('Success response:', data);
                             $('#details-container').html(data);
 
                             // Update visual selection state for rows
@@ -147,6 +146,7 @@
                                     $('#genre-tab').tab('show');
                                 }, 0);
                             }
+                            initializeGenreHandlers();
                         },
                         error: function (xhr, status, error) {
                             console.error('Error details:', {
@@ -155,8 +155,8 @@
                                 response: xhr.responseText
                             });
                             $('#details-container').html(`<div class="alert alert-danger">
-                                                                            Error loading details: ${status} - ${error}
-                                                                        </div>`);
+                                                                                                                Error loading details: ${status} - ${error}
+                                                                                                            </div>`);
                         }
                     });
                 }
@@ -272,22 +272,22 @@
 
                             // Add new row to table
                             var newRow = `
-                <tr class="clickable-row" data-id="${result.id}" style="cursor: pointer;">
-                    <td>
-                        <img src="@Url.Content("~/Images/")${result.icon}" alt="${result.domain}"
-                            class="rounded-circle" width="48" height="48">
-                    </td>
-                    <td>${result.domain}</td>
-                    <td>${result.architect}</td>
-                    <td><span class="badge bg-primary">Active</span></td>
-                    <td class="text-end">
-                        <button class="btn btn-link text-danger delete-archetype"
-                            data-id="${result.id}" data-name="${result.domain}"
-                            onclick="event.stopPropagation();" title="Delete ${result.domain}">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    </td>
-                </tr>`;
+                                                    <tr class="clickable-row" data-id="${result.id}" style="cursor: pointer;">
+                                                        <td>
+                                                            <img src="@Url.Content("~/Images/")${result.icon}" alt="${result.domain}"
+                                                                class="rounded-circle" width="48" height="48">
+                                                        </td>
+                                                        <td>${result.domain}</td>
+                                                        <td>${result.architect}</td>
+                                                        <td><span class="badge bg-primary">Active</span></td>
+                                                        <td class="text-end">
+                                                            <button class="btn btn-link text-danger delete-archetype"
+                                                                data-id="${result.id}" data-name="${result.domain}"
+                                                                onclick="event.stopPropagation();" title="Delete ${result.domain}">
+                                                                <i class="fas fa-trash-alt"></i>
+                                                            </button>
+                                                        </td>
+                                                    </tr>`;
 
                             var $newRow = $(newRow);
                             $('table tbody').append($newRow);
@@ -404,9 +404,7 @@
 
                 // Click handler for rows
                 $('.clickable-row').on('click', function () {
-                    console.log('Row clicked');
                     var archetypeId = $(this).data('id');
-                    console.log('Archetype ID:', archetypeId);
                     loadArchetypeDetails(archetypeId);
                 });
 
@@ -414,6 +412,78 @@
                 var firstRow = $('.clickable-row').first();
                 if (firstRow.length > 0) {
                     loadArchetypeDetails(firstRow.data('id'));
+                }
+
+                // Add New Genre button
+                function initializeGenreHandlers() {
+                    $('#addGenreBtn').click(function () {
+                        $('#createGenreModal').modal('show');
+                    });
+
+                    $('#saveGenre').click(function () {
+                        var formData = {
+                            name: $('#Name').val().replace('Name: ', ''),
+                            description: $('#Description').val().replace('Desc: ', ''),
+                            archetypeId: $('#ArchetypeId').val()
+                        };
+
+                        console.log('Genre Form Data:', JSON.stringify(formData));
+
+                        $.ajax({
+                            url: '@Url.Action("CreateGenre", "Archetypes")',
+                            type: 'POST',
+                            data: JSON.stringify(formData),
+                            contentType: 'application/json',
+                            success: function (response) {
+                                if (response.success) {
+                                    $('#createGenreModal').modal('hide');
+
+                                    // Get current archetype ID
+                                    var currentArchetypeId = $('#ArchetypeId').val();
+
+                                    // Reload the details
+                                    loadArchetypeDetails(currentArchetypeId);
+
+                                    // Switch to genre tab after reload
+                                    setTimeout(function () {
+                                        $('#genre-tab').tab('show');
+                                    }, 500);
+
+                                    Swal.fire({
+                                        title: 'Success!',
+                                        text: 'Genre has been added successfully.',
+                                        icon: 'success',
+                                        confirmButtonColor: '#3085d6'
+                                    });
+
+                                    // Reset the form
+                                    $('#createGenreForm')[0].reset();
+
+                                } else {
+                                    $('#createGenreModal').modal('hide');
+                                    setTimeout(function () {
+                                        Swal.fire({
+                                            title: 'Error!',
+                                            text: 'Failed to create genre: ' + response.message,
+                                            icon: 'error',
+                                            confirmButtonColor: '#3085d6'
+                                        });
+                                    }, 500);
+                                }
+                            },
+                            error: function (xhr, status, error) {
+                                $('#createGenreModal').modal('hide');
+                                setTimeout(function () {
+                                    Swal.fire({
+                                        title: 'Error!',
+                                        text: 'Failed to create genre: ' + error,
+                                        icon: 'error',
+                                        confirmButtonColor: '#3085d6'
+                                    });
+                                }, 500);
+                            }
+                        });
+                    });
                 }
             });
         </script>
