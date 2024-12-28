@@ -25,11 +25,11 @@
                     <form class="mb-4" role="search" aria-label="Filter archetypes">
                         <div class="input-group">
                             <input type="text" class="form-control" placeholder="Filter archetypes"
-                                aria-label="Search input">
+                                aria-label="Search input" autocomplete="off">
                             <div class="input-group-append">
                                 <button type="button" class="btn btn-primary">
                                     <i class="fa fa-search" aria-hidden="true"></i>
-                                    <span>Filter</span>
+                                    <span class="ms-1">Filter</span>
                                 </button>
                             </div>
                         </div>
@@ -115,6 +115,70 @@
                 var getArchetypeDetailsUrl = '@Url.Action("GetArchetypeDetails", "Archetypes")';
                 var deleteArchetypeUrl = '@Url.Action("DeleteArchetype", "Archetypes")';
 
+                let allRows = [];
+                function initializeRows() {
+                    allRows = []; // Clear existing rows
+                    $('.clickable-row').each(function () {
+                        allRows.push({
+                            element: $(this),
+                            domain: $(this).find('td:nth-child(2)').text().toLowerCase(),
+                            architect: $(this).find('td:nth-child(3)').text().toLowerCase()
+                        });
+                    });
+                }
+                initializeRows();
+
+                // Add input event handler for real-time filtering
+                $('input[aria-label="Search input"]').on('input', function () {
+                    const searchTerm = $(this).val().toLowerCase().trim();
+                    filterArchetypes(searchTerm);
+                });
+
+                // Handle the filter button click
+                $('button:contains("Filter")').on('click', function () {
+                    const searchTerm = $('input[aria-label="Search input"]').val().toLowerCase().trim();
+                    filterArchetypes(searchTerm);
+                });
+
+                function filterArchetypes(searchTerm) {
+                    let foundAny = false;
+                    let firstVisibleRow = null;
+
+                    allRows.forEach(row => {
+                        const matches = row.domain.includes(searchTerm) ||
+                            row.architect.includes(searchTerm);
+
+                        if (matches) {
+                            row.element.show();
+                            foundAny = true;
+                            if (!firstVisibleRow) {
+                                firstVisibleRow = row.element;
+                            }
+                        } else {
+                            row.element.hide();
+                        }
+                    });
+
+                    // If no matches found, show a message
+                    const noResultsMsg = $('#no-results-message');
+                    if (!foundAny) {
+                        if (noResultsMsg.length === 0) {
+                            $('tbody').append(
+                                '<tr id="no-results-message"><td colspan="5" class="text-center text-muted">' +
+                                'No archetypes found matching your search</td></tr>'
+                            );
+                        }
+                    } else {
+                        noResultsMsg.remove();
+
+                        // If we have results and the currently selected row is hidden,
+                        // select the first visible row
+                        if ($('.clickable-row.table-active:visible').length === 0 && firstVisibleRow) {
+                            loadArchetypeDetails(firstVisibleRow.data('id'));
+                        }
+                    }
+                }
+
                 // Function to load archetype details
                 function loadArchetypeDetails(archetypeId) {
                     // Store the currently active tab ID before loading new content
@@ -150,8 +214,8 @@
                                 response: xhr.responseText
                             });
                             $('#details-container').html(`<div class="alert alert-danger">
-                                                                                                                                                                                    Error loading details: ${status} - ${error}
-                                                                                                                                                                                </div>`);
+                                                                                                                                                                                                    Error loading details: ${status} - ${error}
+                                                                                                                                                                                                </div>`);
                         }
                     });
                 }
@@ -243,31 +307,33 @@
 
                             $('#createArchetypeModal').modal('hide');
 
-                            // Add new row to table
-                            var newRow = `
-                                                    <tr class="clickable-row" data-id="${result.id}" style="cursor: pointer;">
-                                                        <td>
-                                                            <img src="@Url.Content("~/Images/")${result.icon}" alt="${result.domain}"
-                                                            class="rounded-circle" width="48" height="48">
-                                                        </td>
-                                                        <td>${result.domain}</td>
-                                                        <td>${result.architect}</td>
-                                                        <td><span class="badge bg-primary">Active</span></td>
-                                                        <td class="text-end">
-                                                            <button class="btn btn-link text-danger delete-archetype"
-                                                                data-id="${result.id}" data-name="${result.domain}"
-                                                                onclick="event.stopPropagation();" title="Delete ${result.domain}">
-                                                                <i class="fas fa-trash-alt"></i>
-                                                            </button>
-                                                        </td>
-                                                    </tr>`;
+                            const newRowHtml = `
+                        <tr class="clickable-row" data-id="${result.id}" style="cursor: pointer;">
+                            <td>
+                                <img src="${window.location.origin}/Images/${result.icon}" alt="${result.domain}"
+                                class="rounded-circle" width="48" height="48">
+                            </td>
+                            <td>${result.domain}</td>
+                            <td>${result.architect}</td>
+                            <td><span class="badge bg-primary">Active</span></td>
+                            <td class="text-end">
+                                <button class="btn btn-link text-danger delete-archetype"
+                                    data-id="${result.id}" data-name="${result.domain}"
+                                    onclick="event.stopPropagation();" title="Delete ${result.domain}">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </td>
+                        </tr>`;
 
-                            var $newRow = $(newRow);
-                            $('table tbody').append($newRow);
+                            // Add new row to table
+                            const newRow = $(newRowHtml);
+                            $('table tbody').append(newRow);
 
                             // Update visual selection state for all rows and select new row
                             $('.clickable-row').removeClass('table-active');
                             $newRow.addClass('table-active');
+
+                            initializeRows();
 
                             // Load details for the new archetype
                             loadArchetypeDetails(result.id);
@@ -431,7 +497,7 @@
                             cancelButtonText: 'Cancel'
                         }).then((result) => {
                             if (result.isConfirmed) {
-                                
+
                                 $.ajax({
                                     url: '@Url.Action("DeleteGenre", "Archetypes")',
                                     type: 'DELETE',
@@ -464,17 +530,17 @@
                     const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
 
                     const toastHtml = `
-                                                                            <div id="${toastId}" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
-                                                                                <div class="toast-header ${backgroundColor} text-white">
-                                                                                    <i class="fas ${icon} me-2"></i>
-                                                                                    <strong class="me-auto">${title}</strong>
-                                                                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
-                                                                                </div>
-                                                                                <div class="toast-body">
-                                                                                    ${message}
-                                                                                </div>
-                                                                            </div>
-                                                                        `;
+                                                                                            <div id="${toastId}" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+                                                                                                <div class="toast-header ${backgroundColor} text-white">
+                                                                                                    <i class="fas ${icon} me-2"></i>
+                                                                                                    <strong class="me-auto">${title}</strong>
+                                                                                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+                                                                                                </div>
+                                                                                                <div class="toast-body">
+                                                                                                    ${message}
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        `;
 
                     $('.toast-container').append(toastHtml);
                     const toastElement = document.getElementById(toastId);
