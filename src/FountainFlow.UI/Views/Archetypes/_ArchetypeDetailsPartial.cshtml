@@ -18,6 +18,7 @@
             </div>
         </div>
 
+        <!-- Tabs Navigation -->
         <ul class="nav nav-tabs" role="tablist">
             <li class="nav-item" role="presentation">
                 <button class="nav-link active" id="story-beats-tab" data-bs-toggle="tab" data-bs-target="#story-beats"
@@ -33,6 +34,7 @@
             </li>
         </ul>
 
+        <!-- Tab Content -->
         <div class="tab-content mt-3">
             <!-- Story Beats Tab -->
             <div class="tab-pane fade show active" id="story-beats" role="tabpanel" aria-labelledby="story-beats-tab">
@@ -52,9 +54,7 @@
                                         <i class="fa fa-coffee"></i>
                                     </div>
                                     <div class="vertical-timeline-content">
-                                        <p>
-                                            @beat.Name
-                                        </p>
+                                        <p>@beat.Name</p>
                                         <span class="vertical-date small text-muted">@beat.Description</span>
                                     </div>
                                 </div>
@@ -63,6 +63,7 @@
                     </div>
                 </div>
             </div>
+
             <!-- Genre Tab -->
             <div class="tab-pane fade" id="genre" role="tabpanel" aria-labelledby="genre-tab">
                 <div class="ibox-content m-b-sm border-bottom">
@@ -71,31 +72,51 @@
                             <i class="fa fa-plus"></i> <span class="bold">Add New Genre</span>
                         </button>
                     </div>
+
+                    <!-- Genre List -->
                     @foreach (var genre in Model.Genres)
                     {
                         <div class="row">
                             <div class="col-lg-12">
                                 <div class="ibox">
-                                    <div class="ibox-title  bg-light">
-                                        <h5><i class="fas fa-film me-2"></i> <small class="m-l-sm">@genre.Name</small></h5>
+                                    <div class="ibox-title bg-light">
+                                        <h5><i class="fas fa-film me-2"></i> <small class="ms-2">@genre.Name</small></h5>
+                                        <div class="ibox-tools">
+                                            <a class="collapse-link" data-bs-toggle="collapse" 
+                                                href="#genre@(genre.Id)" role="button" 
+                                                aria-expanded="true" aria-controls="genre@(genre.Id)">
+                                                <i class="fa fa-chevron-up"></i>
+                                            </a>
+                                    <div class="dropdown d-inline-block">
+                                        <a class="dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                            <i class="fa fa-wrench"></i>
+                                        </a>
+                                        <ul class="dropdown-menu">
+                                            <li><a class="dropdown-item" href="#">Config option 1</a></li>
+                                            <li><a class="dropdown-item" href="#">Config option 2</a></li>
+                                        </ul>
+                                    </div>                                            
+                                        </div>
                                     </div>
-                                    <div class="ibox-content">
-                                        <p class="text-start">
-                                            @genre.Description
-                                        </p>
-                                        <div class="hr-line-dashed"></div>
-                                        <div class="btn-group">
-                                            <button type="button" class="btn btn-white btn-xs" title="Edit Genre">
-                                                <i class="fa fa-pencil me-1"></i>Edit
-                                            </button>
-                                            <button type="button" class="btn btn-white btn-xs" title="Clone Genre">
-                                                <i class="fa fa-copy me-1"></i>Clone
-                                            </button>
-                                            <button type="button" class="btn btn-white btn-xs remove-genre-btn"
-                                                data-genre-id="@genre.Id" data-genre-name="@genre.Name"
-                                                title="Remove Genre">
-                                                <i class="fa fa-link me-1"></i>Remove
-                                            </button>
+                                    <div class="collapse" id="genre@(genre.Id)">
+                                        <div class="ibox-content">
+                                            <p class="text-start">
+                                                @genre.Description
+                                            </p>
+                                            <div class="hr-line-dashed"></div>
+                                            <div class="btn-group">
+                                                <button type="button" class="btn btn-white btn-xs" title="Edit Genre">
+                                                    <i class="fa fa-pencil me-1"></i>Edit
+                                                </button>
+                                                <button type="button" class="btn btn-white btn-xs" title="Clone Genre">
+                                                    <i class="fa fa-copy me-1"></i>Clone
+                                                </button>
+                                                <button type="button" class="btn btn-white btn-xs remove-genre-btn"
+                                                    data-genre-id="@genre.Id" data-genre-name="@genre.Name"
+                                                    title="Remove Genre">
+                                                    <i class="fa fa-link me-1"></i>Remove
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -109,3 +130,37 @@
 </div>
 
 @await Html.PartialAsync("_CreateGenrePartial", new GenreViewModel { ArchetypeId = Model.Id })
+
+@section Scripts {
+    <script type="text/javascript">
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize all collapse elements
+            var collapseElements = [].slice.call(document.querySelectorAll('.collapse'))
+            collapseElements.map(function(collapseEl) {
+                return new bootstrap.Collapse(collapseEl, {
+                    toggle: false
+                })
+            });
+
+            // Handle the chevron icon rotation for all collapse links
+            document.querySelectorAll('.collapse-link').forEach(function(el) {
+                el.addEventListener('click', function(e) {
+                    var icon = this.querySelector('i');
+                    icon.classList.toggle('fa-chevron-up');
+                    icon.classList.toggle('fa-chevron-down');
+                });
+            });
+
+            // Handle close links
+            document.querySelectorAll('.close-link').forEach(function(el) {
+                el.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    var content = this.closest('.ibox');
+                    if (content) {
+                        content.remove();
+                    }
+                });
+            });
+        });
+    </script>
+}
