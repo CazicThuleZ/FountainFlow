@@ -67,6 +67,7 @@
                                 }
                             </tbody>
                         </table>
+                        <div id="pagination-container" class="mt-3"></div>
                     </div>
 
                     <div class="mt-3 d-flex justify-content-center gap-2">
@@ -115,7 +116,13 @@
                 var getArchetypeDetailsUrl = '@Url.Action("GetArchetypeDetails", "Archetypes")';
                 var deleteArchetypeUrl = '@Url.Action("DeleteArchetype", "Archetypes")';
 
+                // Pagination settings
+                const rowsPerPage = 10;
+                let currentPage = 1;
                 let allRows = [];
+                let filteredRows = [];
+
+                // Function to initialize row data
                 function initializeRows() {
                     allRows = []; // Clear existing rows
                     $('.clickable-row').each(function () {
@@ -125,7 +132,103 @@
                             architect: $(this).find('td:nth-child(3)').text().toLowerCase()
                         });
                     });
+                    filteredRows = [...allRows]; // Initialize filtered rows with all rows
+                    updatePagination();
                 }
+
+                // Function to update pagination controls
+                function updatePagination() {
+                    // If there are 10 or fewer rows, show all rows and hide pagination
+                    if (filteredRows.length <= 10) {
+                        $('#pagination-container').empty(); // Remove pagination
+                        filteredRows.forEach(row => row.element.show()); // Show all rows
+                        updateEntryInfo();
+                        return;
+                    }
+
+                    const totalPages = Math.ceil(filteredRows.length / rowsPerPage);
+
+                    // Adjust currentPage if it exceeds the new total pages
+                    if (currentPage > totalPages) {
+                        currentPage = totalPages || 1;
+                    }
+
+                    // Create pagination HTML
+                    let paginationHtml = `
+                <nav aria-label="Archetype table navigation">
+                    <ul class="pagination justify-content-center mb-0">
+                        <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                            <a class="page-link" href="#" data-page="previous" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>`;
+
+                    for (let i = 1; i <= totalPages; i++) {
+                        paginationHtml += `
+                    <li class="page-item ${currentPage === i ? 'active' : ''}">
+                        <a class="page-link" href="#" data-page="${i}">${i}</a>
+                    </li>`;
+                    }
+
+                    paginationHtml += `
+                        <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                            <a class="page-link" href="#" data-page="next" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>`;
+
+                    // Update pagination container
+                    $('#pagination-container').html(paginationHtml);
+
+                    // Show current page rows
+                    updateVisibleRows();
+
+                    // Add click handlers for pagination
+                    $('.page-link').on('click', function (e) {
+                        e.preventDefault();
+                        const pageAction = $(this).data('page');
+
+                        if (pageAction === 'previous' && currentPage > 1) {
+                            currentPage--;
+                        } else if (pageAction === 'next' && currentPage < totalPages) {
+                            currentPage++;
+                        } else if (typeof pageAction === 'number') {
+                            currentPage = pageAction;
+                        }
+
+                        updatePagination();
+                    });
+                }
+
+                // Function to update visible rows
+                function updateVisibleRows() {
+                    const startIndex = (currentPage - 1) * rowsPerPage;
+                    const endIndex = startIndex + rowsPerPage;
+
+                    // Hide all rows first
+                    allRows.forEach(row => row.element.hide());
+
+                    // Show only the rows for current page that are also in filteredRows
+                    filteredRows.slice(startIndex, endIndex).forEach(row => row.element.show());
+
+                    // Update "showing X of Y entries" text
+                    updateEntryInfo();
+                }
+
+                // Function to update entry information
+                function updateEntryInfo() {
+                    const startIndex = ((currentPage - 1) * rowsPerPage) + 1;
+                    const endIndex = Math.min(currentPage * rowsPerPage, filteredRows.length);
+                    const totalEntries = filteredRows.length;
+
+                    $('#entry-info').html(
+                        `Showing ${totalEntries > 0 ? startIndex : 0} to ${endIndex} of ${totalEntries} entries`
+                    );
+                }
+
+                // Initialize the table
                 initializeRows();
 
                 // Add input event handler for real-time filtering
@@ -141,27 +244,18 @@
                 });
 
                 function filterArchetypes(searchTerm) {
-                    let foundAny = false;
-                    let firstVisibleRow = null;
+                    // Filter the rows
+                    filteredRows = allRows.filter(row =>
+                        row.domain.includes(searchTerm) ||
+                        row.architect.includes(searchTerm)
+                    );
 
-                    allRows.forEach(row => {
-                        const matches = row.domain.includes(searchTerm) ||
-                            row.architect.includes(searchTerm);
-
-                        if (matches) {
-                            row.element.show();
-                            foundAny = true;
-                            if (!firstVisibleRow) {
-                                firstVisibleRow = row.element;
-                            }
-                        } else {
-                            row.element.hide();
-                        }
-                    });
+                    // Reset to first page when filtering
+                    currentPage = 1;
 
                     // If no matches found, show a message
                     const noResultsMsg = $('#no-results-message');
-                    if (!foundAny) {
+                    if (filteredRows.length === 0) {
                         if (noResultsMsg.length === 0) {
                             $('tbody').append(
                                 '<tr id="no-results-message"><td colspan="5" class="text-center text-muted">' +
@@ -173,10 +267,14 @@
 
                         // If we have results and the currently selected row is hidden,
                         // select the first visible row
+                        const firstVisibleRow = filteredRows[0]?.element;
                         if ($('.clickable-row.table-active:visible').length === 0 && firstVisibleRow) {
                             loadArchetypeDetails(firstVisibleRow.data('id'));
                         }
                     }
+
+                    // Update pagination with filtered results
+                    updatePagination();
                 }
 
                 // Function to load archetype details
@@ -191,7 +289,6 @@
                         data: { id: archetypeId },
                         method: 'GET',
                         success: function (data) {
-                            //console.log('Success response:', data);
                             $('#details-container').html(data);
 
                             // Update visual selection state for rows
@@ -200,7 +297,6 @@
 
                             // If we were on the genre tab, switch back to it
                             if (activeTabId === 'genre-tab') {
-                                // Need to wait for Bootstrap to initialize the new tab elements
                                 setTimeout(function () {
                                     $('#genre-tab').tab('show');
                                 }, 0);
@@ -214,15 +310,15 @@
                                 response: xhr.responseText
                             });
                             $('#details-container').html(`<div class="alert alert-danger">
-                                                                                                                                                                                                    Error loading details: ${status} - ${error}
-                                                                                                                                                                                                </div>`);
+                        Error loading details: ${status} - ${error}
+                    </div>`);
                         }
                     });
                 }
 
                 $('.delete-archetype').on('click', function (e) {
                     e.preventDefault();
-                    e.stopPropagation(); // Prevent row click from triggering
+                    e.stopPropagation();
 
                     const button = $(this);
                     const archetypeId = button.data('id');
@@ -239,32 +335,30 @@
                         cancelButtonText: 'Cancel'
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            // Perform delete
                             $.ajax({
                                 url: deleteArchetypeUrl + '?id=' + archetypeId,
                                 method: 'DELETE',
                                 success: function () {
-                                    // Remove the row with animation
                                     button.closest('tr').fadeOut(400, function () {
                                         $(this).remove();
 
                                         // If this was the selected row, load first available archetype
                                         if ($(this).hasClass('table-active')) {
-                                            const firstRow = $('.clickable-row').first();
+                                            const firstRow = $('.clickable-row:visible').first();
                                             if (firstRow.length > 0) {
                                                 loadArchetypeDetails(firstRow.data('id'));
                                             } else {
-                                                // No more archetypes, clear details
                                                 $('#details-container').html('<div class="alert alert-info">No archetypes available.</div>');
                                             }
                                         }
 
+                                        // Reinitialize rows and pagination after deletion
+                                        initializeRows();
                                         showToast('Success', `The archetype "${archetypeName}" has been deleted.`, 'success');
-
                                     });
                                 },
                                 error: function (xhr, status, error) {
-                                    showToast('Error', `Failed to delete "${archetypeName} :  " ` + errorMessage, 'success');
+                                    showToast('Error', `Failed to delete "${archetypeName}": ` + error, 'error');
                                     console.error('Delete error:', xhr.status, error);
                                 }
                             });
@@ -278,10 +372,8 @@
 
                 // Save Archetype button click handler
                 $('#saveArchetype').on('click', function () {
-                    // Reset any previous validation styling
                     $('.is-invalid').removeClass('is-invalid');
 
-                    // Collect form data
                     var formData = {
                         Domain: $('#Domain').val(),
                         Description: $('#Description').val(),
@@ -292,8 +384,6 @@
                         ArchetypeGenreIds: []
                     };
 
-                    console.log('Form Data:', formData);
-                    // Show loading state
                     var saveButton = $(this);
                     saveButton.prop('disabled', true);
                     saveButton.html('<i class="fas fa-spinner fa-spin me-1"></i> Saving...');
@@ -304,7 +394,6 @@
                         contentType: 'application/json',
                         data: JSON.stringify(formData),
                         success: function (result) {
-
                             $('#createArchetypeModal').modal('hide');
 
                             const newRowHtml = `
@@ -325,26 +414,25 @@
                             </td>
                         </tr>`;
 
-                            // Add new row to table
                             const newRow = $(newRowHtml);
                             $('table tbody').append(newRow);
 
-                            // Update visual selection state for all rows and select new row
                             $('.clickable-row').removeClass('table-active');
-                            $newRow.addClass('table-active');
+                            newRow.addClass('table-active');
 
+                            // Reinitialize rows and update pagination
                             initializeRows();
 
-                            // Load details for the new archetype
+                            // Go to the last page to show the new entry
+                            currentPage = Math.ceil(filteredRows.length / rowsPerPage);
+                            updatePagination();
+
                             loadArchetypeDetails(result.id);
+                            $('#createArchetypeForm')[0].reset();
 
                             showToast('Success', 'Archetype has been created successfully.', 'success');
-
-                            // Reset form
-                            $('#createArchetypeForm')[0].reset();
                         },
                         error: function (xhr, status, error) {
-                            // Handle validation errors
                             if (xhr.status === 400 && xhr.responseJSON) {
                                 Object.keys(xhr.responseJSON).forEach(function (key) {
                                     var input = $('#' + key);
@@ -356,41 +444,36 @@
                             }
                         },
                         complete: function () {
-                            // Reset button state
                             saveButton.prop('disabled', false);
                             saveButton.html('<i class="fas fa-save me-1"></i> Save Archetype');
                         }
                     });
                 });
 
+                // Initialize Dropzone
                 var iconDropzone = new Dropzone("#iconDropzone", {
-                    url: "@Url.Action("UploadIcon", "Archetypes")", // We'll create this action
+                    url: "@Url.Action("UploadIcon", "Archetypes")",
                     maxFiles: 1,
-                    maxFilesize: 2, // MB
+                    maxFilesize: 2,
                     acceptedFiles: "image/*",
                     addRemoveLinks: true,
                     createImageThumbnails: true,
                     thumbnailWidth: 120,
                     thumbnailHeight: 120,
                     init: function () {
-
                         this.on("maxfilesexceeded", function (file) {
-                            // Remove any existing files before adding a new one
                             this.removeAllFiles();
                             this.addFile(file);
                         });
 
                         this.on("addedfile", function (file) {
-                            // If there's already a file, remove it
                             if (this.files.length > 1) {
                                 this.removeFile(this.files[0]);
                             }
                         });
 
                         this.on("success", function (file, response) {
-                            // Store the uploaded file name in the hidden input
                             $('#Icon').val(response.fileName);
-
                             showToast('Success', 'Icon uploaded successfully', 'success');
                         });
 
@@ -399,13 +482,11 @@
                         });
 
                         this.on("removedfile", function (file) {
-                            // Clear the hidden input when file is removed
                             $('#Icon').val('');
                         });
                     }
                 });
 
-                // Clear dropzone when modal is hidden
                 $('#createArchetypeModal').on('hidden.bs.modal', function () {
                     iconDropzone.removeAllFiles(true);
                     $('#Icon').val('');
@@ -418,12 +499,11 @@
                 });
 
                 // Automatically load the first archetype's details
-                var firstRow = $('.clickable-row').first();
+                var firstRow = $('.clickable-row:visible').first();
                 if (firstRow.length > 0) {
                     loadArchetypeDetails(firstRow.data('id'));
                 }
 
-                // Add New Genre button
                 function initializeGenreHandlers() {
                     $('#addGenreBtn').click(function () {
                         $('#createGenreModal').modal('show');
@@ -435,8 +515,6 @@
                             description: $('#Description').val().replace('Desc: ', ''),
                             archetypeId: $('#ArchetypeId').val()
                         };
-
-                        console.log('Genre Form Data:', JSON.stringify(formData));
 
                         $.ajax({
                             url: '@Url.Action("CreateGenre", "Archetypes")',
@@ -530,17 +608,17 @@
                     const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
 
                     const toastHtml = `
-                                                                                            <div id="${toastId}" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
-                                                                                                <div class="toast-header ${backgroundColor} text-white">
-                                                                                                    <i class="fas ${icon} me-2"></i>
-                                                                                                    <strong class="me-auto">${title}</strong>
-                                                                                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
-                                                                                                </div>
-                                                                                                <div class="toast-body">
-                                                                                                    ${message}
-                                                                                                </div>
-                                                                                            </div>
-                                                                                        `;
+                                                                                                        <div id="${toastId}" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+                                                                                                            <div class="toast-header ${backgroundColor} text-white">
+                                                                                                                <i class="fas ${icon} me-2"></i>
+                                                                                                                <strong class="me-auto">${title}</strong>
+                                                                                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+                                                                                                            </div>
+                                                                                                            <div class="toast-body">
+                                                                                                                ${message}
+                                                                                                            </div>
+                                                                                                        </div>
+                                                                                                    `;
 
                     $('.toast-container').append(toastHtml);
                     const toastElement = document.getElementById(toastId);
