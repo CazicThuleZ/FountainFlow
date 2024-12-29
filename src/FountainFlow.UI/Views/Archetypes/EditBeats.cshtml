@@ -1,0 +1,266 @@
+@using FountainFlowUI.Models
+@model EditBeatsViewModel
+
+@{
+    ViewBag.Title = $"Edit Beats - {Model.Domain}";
+}
+
+<style>
+    .editable-field {
+        position: relative;
+        /* Allows absolute positioning of child elements relative to this container */
+    }
+
+    .editable-field .edit-field {
+        padding: 0;
+        /* Removes default button padding */
+        color: #666;
+        /* Sets the pencil icon to a gray color */
+        opacity: 0.5;
+        /* Makes the pencil icon semi-transparent by default */
+        transition: opacity 0.2s;
+        /* Smooth transition for opacity changes */
+    }
+
+    .editable-field:hover .edit-field {
+        opacity: 1;
+        /* Makes the pencil icon fully visible on hover */
+    }
+
+    .editable-field .form-control {
+        margin-top: 0.5rem;
+        /* Adds space between the text and the input field when editing */
+    }
+
+    /* Nestable2 customization */
+    .dd {
+        position: relative;
+        display: block;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .beats-container {
+        overflow-x: auto;
+        padding: 20px;
+    }
+
+    .dd-item {
+        width: 100%;
+    }
+
+    .dd-handle {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 30px;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 3px 0 0 3px;
+        cursor: move;
+        text-align: center;
+        line-height: 100%;
+        z-index: 1;
+    }
+
+    .dd-handle i {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: #6c757d;
+    }
+
+    .dd-content {
+        margin: 0 0 0 30px;
+        padding: 0;
+    }
+
+    .ibox-content .beats-container .ibox {
+        margin-bottom: 0;
+        min-width: 700px;
+        /* Ensures minimum width for beat panels */
+    }
+
+    .dd-content .ibox-content {
+        padding: 15px 20px;
+    }    
+
+    .dd-list {
+        display: block;
+        position: relative;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    /* Drag placeholder styling */
+    .dd-placeholder {
+        display: block;
+        position: relative;
+        margin: 0 0 15px 30px;
+        padding: 0;
+        min-height: 50px;
+        background: #f8f9fa;
+        border: 2px dashed #dee2e6;
+    }
+
+    /* Dragel (dragging element) styling */
+    .dd-dragel {
+        position: absolute;
+        pointer-events: none;
+        z-index: 9999;
+    }
+
+    .dd-dragel>.dd-item .dd-handle {
+        margin-top: 0;
+    }
+
+    .dd-dragel .dd-handle {
+        box-shadow: 2px 4px 6px 0 rgba(0, 0, 0, .1);
+    }
+
+    /* Remove default ibox margins when inside nestable */
+    .dd-item .ibox {
+        margin-bottom: 0;
+    }
+</style>
+
+<div class="row wrapper border-bottom white-bg page-heading">
+    <div class="col-lg-8">
+        <h1>Edit Story Structure</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
+                <li class="breadcrumb-item"><a asp-controller="Archetypes" asp-action="Archetypes">Archetypes</a></li>
+                <li class="breadcrumb-item active" aria-current="page">@Model.Domain - Edit Structure</li>
+            </ol>
+        </nav>
+    </div>
+    <div class="col-lg-4">
+        <div class="title-action">
+            <button class="btn btn-secondary" type="button" id="saveChangesBtn" disabled>
+                <i class="fa fa-save"></i> Save Changes
+            </button>
+            <button class="btn btn-primary" type="button" id="addBeatBtn">
+                <i class="fa fa-plus"></i> Add Beat
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="wrapper wrapper-content animated fadeInRight">
+    <div class="row">
+        <!-- Left Panel - Beats List -->
+        <div class="col-lg-8">
+            <div class="ibox">
+                <div class="ibox-title">
+                    <h5>Story Beats</h5>
+                </div>
+                <div class="ibox-content">
+                    <div class="beats-container" style="min-width: 800px;">
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel - Empty for now -->
+        <div class="col-lg-4">
+            <div class="ibox">
+                <div class="ibox-title">
+                    <h5>Details</h5>
+                </div>
+                <div class="ibox-content">
+                    <!-- Empty for now -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/utils.js"></script>
+    <script src="~/js/beatsEditor.js"></script>
+    <script>
+        // Make model data available to JavaScript
+        const archetypeId = '@Model.ArchetypeId';
+        const initialBeats = @Json.Serialize(Model.Beats);
+
+        $(document).ready(function () {
+            // Initialize the beat editor
+            BeatEditor.initialize(initialBeats);
+
+            // Add Beat button handler
+            $('#addBeatBtn').click(function () {
+                BeatEditor.addBeat();
+            });
+
+            // Save Changes button handler
+            $('#saveChangesBtn').click(async function () {
+                if (!BeatEditor.hasUnsavedChanges()) return;
+
+                try {
+                    const saveButton = $(this);
+                    saveButton.prop('disabled', true);
+                    saveButton.html('<i class="fas fa-spinner fa-spin me-1"></i> Saving...');
+
+                    console.log('Saving changes:', JSON.stringify(BeatEditor.getChanges()));
+                    const response = await $.ajax({
+                        url: '@Url.Action("SaveBeats", "Archetypes")',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify(BeatEditor.getChanges())
+                    });
+
+                    if (response.success) {
+                        BeatEditor.setDirty(false);
+                        showToast('Success', 'Changes saved successfully', 'success');
+                    } else {
+                        showToast('Error', response.message || 'Failed to save changes', 'error');
+                    }
+                } catch (error) {
+                    console.error('Save error:', error);
+                    showToast('Error', 'Failed to save changes', 'error');
+                } finally {
+                    const saveButton = $('#saveChangesBtn');
+                    saveButton.prop('disabled', false);
+                    saveButton.html('<i class="fa fa-save"></i> Save Changes');
+                }
+            });
+
+            // Handle page navigation protection
+            window.addEventListener('beforeunload', function (e) {
+                if (BeatEditor.hasUnsavedChanges()) {
+                    e.preventDefault();
+                    e.returnValue = '';
+                }
+            });
+
+            // Handle navigation within the site
+            $(document).on('click', 'a', function (e) {
+                if (BeatEditor.hasUnsavedChanges()) {
+                    e.preventDefault();
+                    const href = $(this).attr('href');
+
+                    Swal.fire({
+                        title: 'Unsaved Changes',
+                        text: 'You have unsaved changes. Are you sure you want to leave?',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'Leave',
+                        cancelButtonText: 'Stay'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = href;
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+}

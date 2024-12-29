@@ -25,6 +25,15 @@
     {
       "library": "dropzone@5.9.3",
       "destination": "wwwroot/lib/dropzone/"
-    }
+    },
+    {
+      "provider": "jsdelivr",
+      "library": "RamonSmit/Nestable2@1.6.0",
+      "destination": "wwwroot/lib/nestable2/",
+      "files": [
+        "dist/jquery.nestable.min.js",
+        "dist/jquery.nestable.min.css"
+      ]
+    }    
   ]
 }

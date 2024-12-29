@@ -39,7 +39,7 @@
             <!-- Story Beats Tab -->
             <div class="tab-pane fade show active" id="story-beats" role="tabpanel" aria-labelledby="story-beats-tab">
                 <div class="text-center mb-4">
-                    <button title="Edit Structure" type="button" class="btn btn-primary">
+                    <button title="Edit Structure" type="button" class="btn btn-primary" data-archetype-id="@Model.Id">
                         <i class="fa fa-edit me-2"></i>Edit Structure
                     </button>
                 </div>
@@ -82,20 +82,19 @@
                                     <div class="ibox-title bg-light">
                                         <h5><i class="fas fa-film me-2"></i> <small class="ms-2">@genre.Name</small></h5>
                                         <div class="ibox-tools">
-                                            <a class="collapse-link" data-bs-toggle="collapse" 
-                                                href="#genre@(genre.Id)" role="button" 
-                                                aria-expanded="true" aria-controls="genre@(genre.Id)">
+                                            <a class="collapse-link" data-bs-toggle="collapse" href="#genre@(genre.Id)"
+                                                role="button" aria-expanded="true" aria-controls="genre@(genre.Id)">
                                                 <i class="fa fa-chevron-up"></i>
                                             </a>
-                                    <div class="dropdown d-inline-block">
-                                        <a class="dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                                            <i class="fa fa-wrench"></i>
-                                        </a>
-                                        <ul class="dropdown-menu">
-                                            <li><a class="dropdown-item" href="#">Config option 1</a></li>
-                                            <li><a class="dropdown-item" href="#">Config option 2</a></li>
-                                        </ul>
-                                    </div>                                            
+                                            <div class="dropdown d-inline-block">
+                                                <a class="dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                                    <i class="fa fa-wrench"></i>
+                                                </a>
+                                                <ul class="dropdown-menu">
+                                                    <li><a class="dropdown-item" href="#">Config option 1</a></li>
+                                                    <li><a class="dropdown-item" href="#">Config option 2</a></li>
+                                                </ul>
+                                            </div>
                                         </div>
                                     </div>
                                     <div class="collapse" id="genre@(genre.Id)">
@@ -133,18 +132,18 @@
 
 @section Scripts {
     <script type="text/javascript">
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             // Initialize all collapse elements
             var collapseElements = [].slice.call(document.querySelectorAll('.collapse'))
-            collapseElements.map(function(collapseEl) {
+            collapseElements.map(function (collapseEl) {
                 return new bootstrap.Collapse(collapseEl, {
                     toggle: false
                 })
             });
 
             // Handle the chevron icon rotation for all collapse links
-            document.querySelectorAll('.collapse-link').forEach(function(el) {
-                el.addEventListener('click', function(e) {
+            document.querySelectorAll('.collapse-link').forEach(function (el) {
+                el.addEventListener('click', function (e) {
                     var icon = this.querySelector('i');
                     icon.classList.toggle('fa-chevron-up');
                     icon.classList.toggle('fa-chevron-down');
@@ -152,8 +151,8 @@
             });
 
             // Handle close links
-            document.querySelectorAll('.close-link').forEach(function(el) {
-                el.addEventListener('click', function(e) {
+            document.querySelectorAll('.close-link').forEach(function (el) {
+                el.addEventListener('click', function (e) {
                     e.preventDefault();
                     var content = this.closest('.ibox');
                     if (content) {

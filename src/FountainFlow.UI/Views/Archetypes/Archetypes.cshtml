@@ -155,29 +155,29 @@
 
                     // Create pagination HTML
                     let paginationHtml = `
-                <nav aria-label="Archetype table navigation">
-                    <ul class="pagination justify-content-center mb-0">
-                        <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
-                            <a class="page-link" href="#" data-page="previous" aria-label="Previous">
-                                <span aria-hidden="true">&laquo;</span>
-                            </a>
-                        </li>`;
+                        <nav aria-label="Archetype table navigation">
+                            <ul class="pagination justify-content-center mb-0">
+                                <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                                    <a class="page-link" href="#" data-page="previous" aria-label="Previous">
+                                        <span aria-hidden="true">&laquo;</span>
+                                    </a>
+                                </li>`;
 
                     for (let i = 1; i <= totalPages; i++) {
                         paginationHtml += `
-                    <li class="page-item ${currentPage === i ? 'active' : ''}">
-                        <a class="page-link" href="#" data-page="${i}">${i}</a>
-                    </li>`;
+                            <li class="page-item ${currentPage === i ? 'active' : ''}">
+                                <a class="page-link" href="#" data-page="${i}">${i}</a>
+                            </li>`;
                     }
 
                     paginationHtml += `
-                        <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
-                            <a class="page-link" href="#" data-page="next" aria-label="Next">
-                                <span aria-hidden="true">&raquo;</span>
-                            </a>
-                        </li>
-                    </ul>
-                </nav>`;
+                                <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                                    <a class="page-link" href="#" data-page="next" aria-label="Next">
+                                        <span aria-hidden="true">&raquo;</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </nav>`;
 
                     // Update pagination container
                     $('#pagination-container').html(paginationHtml);
@@ -301,6 +301,7 @@
                                     $('#genre-tab').tab('show');
                                 }, 0);
                             }
+                            initializeBeatHandlers();
                             initializeGenreHandlers();
                         },
                         error: function (xhr, status, error) {
@@ -310,8 +311,8 @@
                                 response: xhr.responseText
                             });
                             $('#details-container').html(`<div class="alert alert-danger">
-                        Error loading details: ${status} - ${error}
-                    </div>`);
+                                Error loading details: ${status} - ${error}
+                            </div>`);
                         }
                     });
                 }
@@ -397,22 +398,22 @@
                             $('#createArchetypeModal').modal('hide');
 
                             const newRowHtml = `
-                        <tr class="clickable-row" data-id="${result.id}" style="cursor: pointer;">
-                            <td>
-                                <img src="${window.location.origin}/Images/${result.icon}" alt="${result.domain}"
-                                class="rounded-circle" width="48" height="48">
-                            </td>
-                            <td>${result.domain}</td>
-                            <td>${result.architect}</td>
-                            <td><span class="badge bg-primary">Active</span></td>
-                            <td class="text-end">
-                                <button class="btn btn-link text-danger delete-archetype"
-                                    data-id="${result.id}" data-name="${result.domain}"
-                                    onclick="event.stopPropagation();" title="Delete ${result.domain}">
-                                    <i class="fas fa-trash-alt"></i>
-                                </button>
-                            </td>
-                        </tr>`;
+                                <tr class="clickable-row" data-id="${result.id}" style="cursor: pointer;">
+                                    <td>
+                                        <img src="${window.location.origin}/Images/${result.icon}" alt="${result.domain}"
+                                        class="rounded-circle" width="48" height="48">
+                                    </td>
+                                    <td>${result.domain}</td>
+                                    <td>${result.architect}</td>
+                                    <td><span class="badge bg-primary">Active</span></td>
+                                    <td class="text-end">
+                                        <button class="btn btn-link text-danger delete-archetype"
+                                            data-id="${result.id}" data-name="${result.domain}"
+                                            onclick="event.stopPropagation();" title="Delete ${result.domain}">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </td>
+                                </tr>`;
 
                             const newRow = $(newRowHtml);
                             $('table tbody').append(newRow);
@@ -502,6 +503,14 @@
                 var firstRow = $('.clickable-row:visible').first();
                 if (firstRow.length > 0) {
                     loadArchetypeDetails(firstRow.data('id'));
+                }
+
+                function initializeBeatHandlers() {
+                    $('button[title="Edit Structure"]').on('click', function () {
+                        const archetypeId = $(this).data('archetype-id');
+                        const domain = $('.clickable-row.table-active td:nth-child(2)').text();
+                        window.location.href = `/Archetypes/EditBeats/${archetypeId}?domain=${encodeURIComponent(domain)}`;
+                    });
                 }
 
                 function initializeGenreHandlers() {
@@ -608,17 +617,17 @@
                     const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
 
                     const toastHtml = `
-                                                                                                        <div id="${toastId}" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
-                                                                                                            <div class="toast-header ${backgroundColor} text-white">
-                                                                                                                <i class="fas ${icon} me-2"></i>
-                                                                                                                <strong class="me-auto">${title}</strong>
-                                                                                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
-                                                                                                            </div>
-                                                                                                            <div class="toast-body">
-                                                                                                                ${message}
-                                                                                                            </div>
-                                                                                                        </div>
-                                                                                                    `;
+                                                                                                                <div id="${toastId}" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+                                                                                                                    <div class="toast-header ${backgroundColor} text-white">
+                                                                                                                        <i class="fas ${icon} me-2"></i>
+                                                                                                                        <strong class="me-auto">${title}</strong>
+                                                                                                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+                                                                                                                    </div>
+                                                                                                                    <div class="toast-body">
+                                                                                                                        ${message}
+                                                                                                                    </div>
+                                                                                                                </div>
+                                                                                                            `;
 
                     $('.toast-container').append(toastHtml);
                     const toastElement = document.getElementById(toastId);

@@ -1,3 +1,4 @@
+using FountainFlow.UI.DTOs;
 using FountainFlow.UI.Models;
 using FountainFlowUI.DTOs;
 using FountainFlowUI.Interfaces;
@@ -304,6 +305,60 @@ public class ArchetypesController : Controller
                 success = false,
                 message = "Unable to delete genre at this time. Please try again later."
             });
+        }
+    }
+
+    [HttpGet]
+    [Route("Archetypes/EditBeats/{id}")]
+    public async Task<IActionResult> EditBeats(Guid id, string domain)
+    {
+        try
+        {
+            var beats = await _archetypesRepository.GetArchetypeBeatsByArchetypeIdIdAsync(id);
+
+            var model = new EditBeatsViewModel
+            {
+                ArchetypeId = id,
+                Domain = domain,
+                Beats = beats.Select(b => new BeatViewModel
+                {
+                    Id = b.Id,
+                    Name = b.Name,
+                    Description = b.Description,
+                    Sequence = b.Sequence,
+                    PercentOfStory = b.PercentOfStory,
+                    ArchetypeId = id
+                }).OrderBy(b => b.Sequence).ToList()
+            };
+
+            return View(model);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while fetching beats for archetype {Id}", id);
+            return View("Error", new ErrorViewModel
+            {
+                Message = "Unable to load beats at this time. Please try again later."
+            });
+        }
+    }
+
+    [HttpPost]
+    [Route("Archetypes/SaveBeats")]
+    public async Task<IActionResult> SaveBeats([FromBody] SaveBeatsRequest request)
+    {
+        try
+        {
+            // TODO: Implement your save logic here
+            // You'll want to handle both updates to existing beats
+            // and creation of new beats (those with temp_ ids)
+
+            return Json(new { success = true });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error saving beats");
+            return Json(new { success = false, message = "Failed to save changes" });
         }
     }
 }
