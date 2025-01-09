@@ -53,6 +53,7 @@ namespace FountainFlow.Api.Controllers
         {
             var archetypeBeats = await _ffDbContext.ArchetypeBeats
                 .Where(ab => ab.ArchetypeId == id)
+                .OrderBy(ab => ab.Sequence)
                 .ToListAsync();
 
             if (!archetypeBeats.Any())
@@ -129,6 +130,74 @@ namespace FountainFlow.Api.Controllers
 
             return NoContent();
         }
+
+        [HttpPost("SaveBeats")]
+        public async Task<IActionResult> SaveBeats([FromBody] SaveBeatsRequestDto request)
+        {
+            if (request == null || request.Beats == null)
+                return BadRequest("Invalid request data.");
+
+            try
+            {
+                var existingBeats = await _ffDbContext.ArchetypeBeats
+                    .Where(ab => ab.ArchetypeId == request.ArchetypeId)
+                    .ToListAsync();
+
+                var beatsToDelete = existingBeats
+                    .Where(eb => !request.Beats.Any(rb => rb.Id == eb.Id))
+                    .ToList();
+
+                var beatsToUpdate = existingBeats
+                    .Where(eb => request.Beats.Any(rb => rb.Id == eb.Id))
+                    .ToList();
+
+                var beatsToAdd = request.Beats
+                    .Where(rb => !existingBeats.Any(eb => eb.Id == rb.Id))
+                    .Select(rb => new ArchetypeBeat
+                    {
+                        Id = Guid.NewGuid(),
+                        ArchetypeId = request.ArchetypeId,
+                        Name = rb.Name,
+                        Description = rb.Description,
+                        Sequence = rb.Sequence,
+                        PercentOfStory = rb.PercentOfStory,
+                        CreatedUTC = DateTime.UtcNow,
+                        UpdatedUTC = DateTime.UtcNow
+                    })
+                    .ToList();
+
+                // Perform delete, update, and add operations
+                if (beatsToDelete.Any())
+                {
+                    _ffDbContext.ArchetypeBeats.RemoveRange(beatsToDelete);
+                }
+
+                foreach (var existingBeat in beatsToUpdate)
+                {
+                    var updatedBeat = request.Beats.First(rb => rb.Id == existingBeat.Id);
+                    existingBeat.Name = updatedBeat.Name;
+                    existingBeat.Description = updatedBeat.Description;
+                    existingBeat.Sequence = updatedBeat.Sequence;
+                    existingBeat.PercentOfStory = updatedBeat.PercentOfStory;
+                    existingBeat.UpdatedUTC = DateTime.UtcNow;
+                }
+
+                if (beatsToAdd.Any())
+                {
+                    _ffDbContext.ArchetypeBeats.AddRange(beatsToAdd);
+                }
+
+                // Save changes to the database
+                await _ffDbContext.SaveChangesAsync();
+
+                return Ok(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "An error occurred while saving beats:  " + ex.Message);
+            }
+        }
+
 
         private bool ArchetypeBeatExists(Guid id)
         {
