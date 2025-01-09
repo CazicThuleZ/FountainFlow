@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using FountainFlowUI.Models;
 
-namespace FountainFlow.UI.DTOs
+namespace FountainFlowUI.DTOs
 {
     public class SaveBeatsRequest
     {

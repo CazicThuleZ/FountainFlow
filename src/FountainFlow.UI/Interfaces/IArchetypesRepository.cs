@@ -12,4 +12,5 @@ public interface IArchetypesRepository
     Task<ArchetypeDto> CreateArchetypeAsync(ArchetypeDto archetypeDto);
     Task<ArchetypeGenreDto> CreateArchetypeGenreAsync(ArchetypeGenreDto archetypeGenreDto);
     Task<bool> DeleteArchetypeGenreAsync(Guid id);
+    Task<bool> SaveBeatsAsync(SaveBeatsRequestDto request);
 }

@@ -1,15 +1,17 @@
 // beatsEditor.js
 const BeatEditor = {
-    originalState: [], // Store initial state
-    currentState: [], // Store current state
-    isDirty: false,   // Track if changes exist
+    originalState: [],
+    currentState: [],
+    isDirty: false,
+    selectedBeatId: null,
 
     initialize(beats) {
-        // Deep clone the initial beats array to both states
         this.originalState = JSON.parse(JSON.stringify(beats));
         this.currentState = JSON.parse(JSON.stringify(beats));
         this.isDirty = false;
+        this.selectedBeatId = null;
         this.renderBeats();
+        this.initializeDetailHandlers();
     },
 
     // Check if there are unsaved changes
@@ -46,6 +48,7 @@ const BeatEditor = {
         this.currentState.push(newBeat);
         this.setDirty(true);
         this.renderBeats();
+        this.selectBeat(newBeat.id); // Select the newly added beat
     },
 
     // Update a beat
@@ -55,6 +58,11 @@ const BeatEditor = {
             this.currentState[index] = { ...this.currentState[index], ...updates };
             this.setDirty(true);
             this.renderBeats();
+
+            // If this beat is currently selected, refresh the detail panel
+            if (this.selectedBeatId === beatId) {
+                this.selectBeat(beatId);
+            }
         }
     },
 
@@ -67,6 +75,9 @@ const BeatEditor = {
             this.currentState.forEach((beat, idx) => {
                 beat.sequence = idx + 1;
             });
+            if (this.selectedBeatId === beatId) {
+                this.clearSelection();
+            }
             this.setDirty(true);
             this.renderBeats();
         }
@@ -87,53 +98,20 @@ const BeatEditor = {
             .sort((a, b) => a.sequence - b.sequence)
             .forEach(beat => {
                 const beatItem = $(`
-                    <li class="dd-item" data-id="${beat.id}">
+                    <li class="dd-item ${beat.id === this.selectedBeatId ? 'selected' : ''}" data-id="${beat.id}">
                         <div class="dd-handle">
                             <i class="fas fa-grip-vertical"></i>
                         </div>
-                        <div class="dd-content">
-                            <div class="ibox mb-0" style="min-width: 1400px;">
-                                <div class="ibox-title">
-                                    <div class="row align-items-center">
-                                        <div class="col">
-                                            <div class="editable-field">
-                                                <h5 class="m-0 d-flex align-items-center">
-                                                    <span class="editable-text" data-field="name">${beat.name}</span>
-                                                    <button class="btn btn-link btn-xs edit-field ms-2" data-field="name">
-                                                        <i class="fa fa-pencil"></i>
-                                                    </button>
-                                                </h5>
-                                            </div>
-                                        </div>
-                                        <div class="col-auto">
-                                            <button class="btn btn-danger btn-xs delete-beat" data-beat-id="${beat.id}">
-                                                <i class="fa fa-trash"></i> Delete
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="ibox-content">
-                                    <div class="editable-field mb-3">
-                                        <p class="editable-text mb-0" data-field="description">${beat.description}</p>
-                                        <button class="btn btn-link btn-xs edit-field" data-field="description">
-                                            <i class="fa fa-pencil"></i>
-                                        </button>
-                                    </div>
-                                    <div class="row text-muted">
-                                        <div class="col-6">
-                                            <small>Sequence: ${beat.sequence}</small>
-                                        </div>
-                                        <div class="col-6">
-                                            <div class="editable-field text-end">
-                                                <small class="editable-text" data-field="percentOfStory">${beat.percentOfStory}% of Story</small>
-                                                <button class="btn btn-link btn-xs edit-field" data-field="percentOfStory">
-                                                    <i class="fa fa-pencil"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                        <div class="dd-content d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <div class="beat-name">${beat.name}</div>
+                                <button class="btn btn-link btn-xs edit-name ms-2" data-beat-id="${beat.id}">
+                                    <i class="fa fa-pencil"></i>
+                                </button>
                             </div>
+                            <button class="btn btn-danger btn-xs delete-beat" data-beat-id="${beat.id}">
+                                <i class="fa fa-trash"></i>
+                            </button>
                         </div>
                     </li>
                 `);
@@ -156,86 +134,149 @@ const BeatEditor = {
         this.attachEventHandlers();
     },
 
+    selectBeat(beatId) {
+        this.selectedBeatId = beatId;
+        const beat = this.currentState.find(b => b.id === beatId);
+        
+        if (beat) {
+            $('#noBeatSelected').addClass('d-none');
+            $('#beatDetails').removeClass('d-none');
+            $('#sequenceBadge').removeClass('d-none');
+            
+            // Update the panel title and sequence
+            $('#beatDetailsTitle').text(beat.name);
+            $('#beatSequence').text(beat.sequence);
+            
+            // Update the detail fields
+            $('#beatDescription').val(beat.description);
+            $('#beatPercent').val(beat.percentOfStory);
+            
+            // Update visual selection
+            $('.dd-item').removeClass('selected');
+            $(`.dd-item[data-id="${beatId}"]`).addClass('selected');
+        } else {
+            this.clearSelection();
+        }
+    },
+    
+    clearSelection() {
+        this.selectedBeatId = null;
+        $('#beatDetails').addClass('d-none');
+        $('#noBeatSelected').removeClass('d-none');
+        $('#sequenceBadge').addClass('d-none');
+        $('.dd-item').removeClass('selected');
+        $('#beatDetailsTitle').text('Beat Details');
+    },
+
+    initializeDetailHandlers() {
+        // Handle Description changes
+        $('#beatDescription').on('change', (e) => {
+            if (this.selectedBeatId) {
+                this.updateBeat(this.selectedBeatId, {
+                    description: $(e.target).val()
+                });
+            }
+        });
+
+        // Handle Percent changes
+        $('#beatPercent').on('change', (e) => {
+            if (this.selectedBeatId) {
+                const value = Math.min(Math.max(parseInt($(e.target).val()) || 0, 0), 100);
+                $(e.target).val(value); // Update input with constrained value
+                this.updateBeat(this.selectedBeatId, {
+                    percentOfStory: value
+                });
+            }
+        });
+    },
+
     // Attach event handlers
     attachEventHandlers() {
         // Delete beat handler
         $('.delete-beat').on('click', (e) => {
+            e.stopPropagation(); // Prevent beat selection when deleting
             const beatId = $(e.currentTarget).data('beat-id');
 
-            // Confirm deletion
             if (confirm('Are you sure you want to delete this beat?')) {
                 this.deleteBeat(beatId);
             }
         });
 
-        // Edit field handler
-        $('.edit-field').on('click', (e) => {
-            e.preventDefault();
-            const button = $(e.currentTarget);
-            const field = button.data('field');
-            const beatItem = button.closest('.dd-item');
-            const beatId = beatItem.data('id');
-            const textElement = button.closest('.editable-field').find('.editable-text');
-            const currentValue = this.currentState.find(b => b.id === beatId)[field];
+        // Edit name handler
+        $('.edit-name').on('click', (e) => {
+            e.stopPropagation(); // Prevent beat selection
+            const beatId = $(e.currentTarget).data('beat-id');
+            const beatNameElement = $(e.currentTarget).siblings('.beat-name');
+            const currentValue = beatNameElement.text();
 
-            // Create input based on field type
-            let input;
-            if (field === 'description') {
-                input = $('<textarea>')
-                    .addClass('form-control')
-                    .val(currentValue)
-                    .css('min-height', '100px');
-            } else if (field === 'percentOfStory') {
-                input = $('<input>')
-                    .attr('type', 'number')
-                    .addClass('form-control')
-                    .attr('min', '0')
-                    .attr('max', '100')
-                    .val(currentValue);
-            } else {
-                input = $('<input>')
-                    .attr('type', 'text')
-                    .addClass('form-control')
-                    .val(currentValue);
-            }
+            const input = $('<input>')
+                .attr('type', 'text')
+                .addClass('form-control form-control-sm')
+                .val(currentValue);
 
-            // Add save and cancel buttons
-            const controls = $('<div>')
-                .addClass('mt-2')
-                .append(
-                    $('<button>')
-                        .addClass('btn btn-primary btn-sm me-2 save-edit')
-                        .html('<i class="fa fa-check"></i> Save'),
-                    $('<button>')
-                        .addClass('btn btn-default btn-sm cancel-edit')
-                        .html('<i class="fa fa-times"></i> Cancel')
-                );
+            const saveBtn = $('<button>')
+                .addClass('btn btn-primary btn-xs ms-2')
+                .html('<i class="fa fa-check"></i>');
 
-            // Replace text with input and controls
-            textElement.hide()
-                .after(input)
-                .after(controls);
-            button.hide();
+            const cancelBtn = $('<button>')
+                .addClass('btn btn-secondary btn-xs ms-1')
+                .html('<i class="fa fa-times"></i>');
+
+            const buttonGroup = $('<div>')
+                .addClass('d-flex align-items-center')
+                .append(input)
+                .append(saveBtn)
+                .append(cancelBtn);
+
+            beatNameElement.hide()
+                .after(buttonGroup);
+            $(e.currentTarget).hide();
+            input.focus();
 
             // Handle save
-            controls.find('.save-edit').on('click', () => {
-                const newValue = input.val();
-                let processedValue = newValue;
-
-                if (field === 'percentOfStory') {
-                    processedValue = Math.min(Math.max(parseInt(newValue) || 0, 0), 100);
+            saveBtn.on('click', () => {
+                const newValue = input.val().trim();
+                if (newValue) {
+                    this.updateBeat(beatId, { name: newValue });
                 }
-
-                this.updateBeat(beatId, { [field]: processedValue });
             });
 
             // Handle cancel
-            controls.find('.cancel-edit').on('click', () => {
+            cancelBtn.on('click', () => {
                 this.renderBeats();
             });
 
-            // Focus the input
-            input.focus();
+            // Handle enter key
+            input.on('keypress', (e) => {
+                if (e.which === 13) {
+                    e.preventDefault();
+                    const newValue = input.val().trim();
+                    if (newValue) {
+                        this.updateBeat(beatId, { name: newValue });
+                    }
+                }
+            });
+
+            // Handle escape key
+            input.on('keyup', (e) => {
+                if (e.which === 27) {
+                    this.renderBeats();
+                }
+            });
+
+            // Handle blur if clicking outside
+            input.on('blur', (e) => {
+                // Only trigger if not clicking the save or cancel buttons
+                if (!$(e.relatedTarget).is(saveBtn) && !$(e.relatedTarget).is(cancelBtn)) {
+                    this.renderBeats();
+                }
+            });
+        });
+
+        // Beat selection handler
+        $('.dd-item').on('click', (e) => {
+            const beatId = $(e.currentTarget).data('id');
+            this.selectBeat(beatId);
         });
     },
 
@@ -243,24 +284,37 @@ const BeatEditor = {
     getChanges() {
         return {
             archetypeId: archetypeId,
-            beats: this.currentState
+            beats: this.currentState.map(beat => ({
+                id: beat.id,
+                name: beat.name,
+                description: beat.description,
+                sequence: beat.sequence,
+                percentOfStory: beat.percentOfStory
+            }))
         };
     },
 
     // Update sequences after drag and drop
     updateSequences(items) {
-
         const newOrder = items.map(item => item.id);
         this.currentState.sort((a, b) => {
             return newOrder.indexOf(a.id) - newOrder.indexOf(b.id);
         });
-        
+
         this.currentState.forEach((beat, index) => {
             beat.sequence = index + 1;
         });
 
         this.setDirty(true);
         this.renderBeats();
+
+        // If a beat is selected, update its sequence display
+        if (this.selectedBeatId) {
+            const selectedBeat = this.currentState.find(b => b.id === this.selectedBeatId);
+            if (selectedBeat) {
+                $('#beatSequence').text(selectedBeat.sequence);
+            }
+        }
     }
 };
 

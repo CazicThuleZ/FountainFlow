@@ -5,131 +5,6 @@
     ViewBag.Title = $"Edit Beats - {Model.Domain}";
 }
 
-<style>
-    .editable-field {
-        position: relative;
-        /* Allows absolute positioning of child elements relative to this container */
-    }
-
-    .editable-field .edit-field {
-        padding: 0;
-        /* Removes default button padding */
-        color: #666;
-        /* Sets the pencil icon to a gray color */
-        opacity: 0.5;
-        /* Makes the pencil icon semi-transparent by default */
-        transition: opacity 0.2s;
-        /* Smooth transition for opacity changes */
-    }
-
-    .editable-field:hover .edit-field {
-        opacity: 1;
-        /* Makes the pencil icon fully visible on hover */
-    }
-
-    .editable-field .form-control {
-        margin-top: 0.5rem;
-        /* Adds space between the text and the input field when editing */
-    }
-
-    /* Nestable2 customization */
-    .dd {
-        position: relative;
-        display: block;
-        margin: 0;
-        padding: 0;
-        list-style: none;
-    }
-
-    .beats-container {
-        overflow-x: auto;
-        padding: 20px;
-    }
-
-    .dd-item {
-        width: 100%;
-    }
-
-    .dd-handle {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 30px;
-        height: 100%;
-        margin: 0;
-        padding: 0;
-        background: #f8f9fa;
-        border: 1px solid #dee2e6;
-        border-radius: 3px 0 0 3px;
-        cursor: move;
-        text-align: center;
-        line-height: 100%;
-        z-index: 1;
-    }
-
-    .dd-handle i {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        color: #6c757d;
-    }
-
-    .dd-content {
-        margin: 0 0 0 30px;
-        padding: 0;
-    }
-
-    .ibox-content .beats-container .ibox {
-        margin-bottom: 0;
-        min-width: 700px;
-        /* Ensures minimum width for beat panels */
-    }
-
-    .dd-content .ibox-content {
-        padding: 15px 20px;
-    }    
-
-    .dd-list {
-        display: block;
-        position: relative;
-        margin: 0;
-        padding: 0;
-        list-style: none;
-    }
-
-    /* Drag placeholder styling */
-    .dd-placeholder {
-        display: block;
-        position: relative;
-        margin: 0 0 15px 30px;
-        padding: 0;
-        min-height: 50px;
-        background: #f8f9fa;
-        border: 2px dashed #dee2e6;
-    }
-
-    /* Dragel (dragging element) styling */
-    .dd-dragel {
-        position: absolute;
-        pointer-events: none;
-        z-index: 9999;
-    }
-
-    .dd-dragel>.dd-item .dd-handle {
-        margin-top: 0;
-    }
-
-    .dd-dragel .dd-handle {
-        box-shadow: 2px 4px 6px 0 rgba(0, 0, 0, .1);
-    }
-
-    /* Remove default ibox margins when inside nestable */
-    .dd-item .ibox {
-        margin-bottom: 0;
-    }
-</style>
-
 <div class="row wrapper border-bottom white-bg page-heading">
     <div class="col-lg-8">
         <h1>Edit Story Structure</h1>
@@ -154,34 +29,100 @@
 </div>
 
 <div class="wrapper wrapper-content animated fadeInRight">
+
     <div class="row">
-        <!-- Left Panel - Beats List -->
-        <div class="col-lg-8">
+        <div class="row h-100">
+            <div class="col-lg-2">
+                <div class="ibox h-100">
+                    <div class="ibox-title">
+                        <h5>Archetype Details</h5>
+                    </div>
+                    <div class="ibox-content">
+                        <div class="text-center mb-3">
+                            <img src="@Url.Content($"~/Images/{Model.Icon}")" alt="@Model.Domain"
+                                class="rounded-circle img-fluid" style="max-width: 80px; max-height: 80px;">
+                        </div>
+                        <div class="form-group">
+                            <label class="font-bold">Domain</label>
+                            <p class="form-control-static">@Model.Domain</p>
+                        </div>
+                        <div class="form-group mt-2">
+                            <label class="font-bold">Architect</label>
+                            <p class="form-control-static">@Model.Architect</p>
+                        </div>
+                        <div class="form-group mt-2">
+                            <label class="font-bold">Description</label>
+                            <p class="form-control-static small">@Model.Description</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-10">
+                <div class="ibox h-100">
+                    <div class="ibox-title d-flex justify-content-between align-items-center">
+                        <h5 id="beatDetailsTitle" class="mb-0">Beat Details</h5>
+                        <span id="sequenceBadge" class="badge bg-primary rounded-pill d-none">
+                            Sequence: <span id="beatSequence"></span>
+                        </span>
+                    </div>
+                    <div class="ibox-content">
+                        <div id="beatDetails" class="d-none">
+                            <div class="form-group">
+                                <label class="font-bold">Description</label>
+                                <textarea id="beatDescription" class="form-control" rows="3"></textarea>
+                            </div>
+                            <div class="form-group mt-3">
+                                <label class="font-bold">Percent of Story</label>
+                                <input type="number" id="beatPercent" class="form-control" min="0" max="100">
+                            </div>
+                        </div>
+                        <div id="noBeatSelected" class="text-center text-muted py-5">
+                            Select a beat to view and edit details
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Panel - Beats List -->
+    <div class="row mt-4">
+        <div class="col-lg-12">
             <div class="ibox">
                 <div class="ibox-title">
                     <h5>Story Beats</h5>
                 </div>
                 <div class="ibox-content">
-                    <div class="beats-container" style="min-width: 800px;">
-
+                    <div class="beats-container">
+                        <div class="dd" id="beats-list">
+                            <ol class="dd-list">
+                                @foreach (var beat in Model.Beats.OrderBy(b => b.Sequence))
+                                {
+                                    <li class="dd-item" data-id="@beat.Id">
+                                        <div class="dd-handle">
+                                            <i class="fas fa-grip-vertical"></i>
+                                        </div>
+                                        <div class="dd-content d-flex justify-content-between align-items-center">
+                                            <div class="beat-name">@beat.Name</div>
+                                            <button class="btn btn-danger btn-xs delete-beat" data-beat-id="@beat.Id"
+                                                onclick="event.stopPropagation();">
+                                                <i class="fa fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </li>
+                                }
+                            </ol>
+                        </div>
                     </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Right Panel - Empty for now -->
-        <div class="col-lg-4">
-            <div class="ibox">
-                <div class="ibox-title">
-                    <h5>Details</h5>
-                </div>
-                <div class="ibox-content">
-                    <!-- Empty for now -->
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/beats-editor.css" />
+}
 
 @section Scripts {
     <script src="~/js/utils.js"></script>

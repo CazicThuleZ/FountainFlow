@@ -1,4 +1,3 @@
-using FountainFlow.UI.DTOs;
 using FountainFlow.UI.Models;
 using FountainFlowUI.DTOs;
 using FountainFlowUI.Interfaces;
@@ -314,12 +313,16 @@ public class ArchetypesController : Controller
     {
         try
         {
+            var archetype = await _archetypesRepository.GetArchetypeByIdAsync(id);
             var beats = await _archetypesRepository.GetArchetypeBeatsByArchetypeIdIdAsync(id);
 
             var model = new EditBeatsViewModel
             {
                 ArchetypeId = id,
-                Domain = domain,
+                Domain = archetype.Domain,
+                Architect = archetype.Architect,
+                Description = archetype.Description,
+                Icon = archetype.Icon,
                 Beats = beats.Select(b => new BeatViewModel
                 {
                     Id = b.Id,
@@ -349,16 +352,34 @@ public class ArchetypesController : Controller
     {
         try
         {
-            // TODO: Implement your save logic here
-            // You'll want to handle both updates to existing beats
-            // and creation of new beats (those with temp_ ids)
+            if (request == null || request.Beats == null)
+                return BadRequest("Invalid request data.");
+
+            var saveRequestDto = new SaveBeatsRequestDto
+            {
+                ArchetypeId = request.ArchetypeId,
+                Beats = request.Beats.Select(b => new ArchetypeBeatDto
+                {
+                    Id = Guid.TryParse(b.Id, out var id) ? id : Guid.Empty,
+                    Name = b.Name,
+                    Description = b.Description,
+                    Sequence = b.Sequence,
+                    PercentOfStory = b.PercentOfStory
+                }).ToList()
+            };
+
+            var success = await _archetypesRepository.SaveBeatsAsync(saveRequestDto);
+
+            if (!success)
+                return Json(new { success = false, message = "Failed to save beats" });
 
             return Json(new { success = true });
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error saving beats");
-            return Json(new { success = false, message = "Failed to save changes" });
+            return Json(new { success = false, message = "An error occurred while saving beats." });
         }
     }
+
 }

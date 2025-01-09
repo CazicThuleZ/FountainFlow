@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 using System.Text.Json;
 using FountainFlowUI.DTOs;
 using FountainFlowUI.Helpers;
@@ -177,7 +178,7 @@ public class ArchetypesRepository : IArchetypesRepository
 
             if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
-                _logger.LogInformation("No genres found for archetype {ArchetypeId}", archetypeId);
+                _logger.LogInformation("No beats found for archetype {ArchetypeId}", archetypeId);
                 return new List<ArchetypeBeatDto>();
             }
 
@@ -375,6 +376,22 @@ public class ArchetypesRepository : IArchetypesRepository
         {
             _logger.LogError(ex, "Unexpected error occurred while deleting archetype genre");
             throw new RepositoryException($"An unexpected error occurred while deleting archetype genre {genreId}", ex);
+        }
+    }
+
+    public async Task<bool> SaveBeatsAsync(SaveBeatsRequestDto request)
+    {
+        try
+        {
+            var jsonContent = new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json");
+            var response = await _httpClient.PostAsync($"{_apiBaseUrl}/api/v1.0/ArchetypeBeats/SaveBeats", jsonContent);
+
+            return response.IsSuccessStatusCode;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error occurred while saving the beat sheet");
+            throw new RepositoryException($"An unexpected error occurred while deleting archetype beats {request.ArchetypeId.ToString()}", ex);
         }
     }
 }
