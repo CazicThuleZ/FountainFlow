@@ -16,7 +16,8 @@ const HANDLERS = {
         EDIT_NAME: '.edit-name',
         BEAT_ITEM: '.dd-item',
         BEAT_DESCRIPTION: '#beatDescription',
-        BEAT_PERCENT: '#beatPercent'
+        BEAT_PERCENT: '#beatPercent',
+        DISTRIBUTE_COVERAGE_BTN: '#distributeCoverageBtn'
     }
 };
 
@@ -33,6 +34,7 @@ export const EventHandlers = {
         this.attachSelectionHandlers();
         this.attachDetailPanelHandlers();
         this.attachNavigationHandlers();
+        this.attachDistributeCoverageHandler();
     },
 
     /**
@@ -187,7 +189,40 @@ export const EventHandlers = {
             }
         });
     },
-
+    attachDistributeCoverageHandler() {
+        $(document).on('click', HANDLERS.SELECTORS.DISTRIBUTE_COVERAGE_BTN, function () {
+            // Get all beats
+            const beats = BeatState.getCurrentState();
+    
+            if (!beats || beats.length === 0) {
+                console.log("No beats available to distribute coverage.");
+                return;
+            }
+    
+            const totalBeats = beats.length;
+            const evenValue = Math.floor(100 / totalBeats); // Evenly distribute points
+            const remainder = 100 % totalBeats; // Remaining points to adjust
+    
+            let totalAssigned = 0;
+    
+            // Update each beat's percent value
+            beats.forEach((beat, index) => {
+                const isLastBeat = index === totalBeats - 1;
+                const newPercent = isLastBeat ? 100 - totalAssigned : evenValue; // Adjust the last beat if needed
+    
+                totalAssigned += newPercent; // Keep track of assigned points
+                BeatState.updateBeat(beat.id, { percentOfStory: newPercent });
+    
+                // Update the displayed value in the beats list
+                $(`#beatPercentValue-${beat.id}`).text(`${newPercent}%`);
+            });
+    
+            // Flag the form as dirty to enable the Save Changes button
+            BeatState.setDirty(true);
+    
+            console.log("Coverage distributed evenly among beats.");
+        });
+    },
     /**
      * Remove all event handlers (cleanup)
      */

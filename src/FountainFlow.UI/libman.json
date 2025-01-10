@@ -34,6 +34,13 @@
         "dist/jquery.nestable.min.js",
         "dist/jquery.nestable.min.css"
       ]
-    }    
+    },
+    {
+      "library": "jQuery-Knob@1.2.13",
+      "destination": "wwwroot/lib/jquery-knob",
+      "files": [
+        "jquery.knob.min.js"
+      ]
+    }
   ]
 }

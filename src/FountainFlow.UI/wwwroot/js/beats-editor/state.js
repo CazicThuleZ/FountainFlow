@@ -84,7 +84,7 @@ export const BeatState = {
         if (!this.validateBeat(beat)) {
             throw new Error('Invalid beat object');
         }
-        
+
         this.currentState.push(beat);
         this.setDirty(true);
         return beat;
@@ -100,7 +100,7 @@ export const BeatState = {
         const index = this.currentState.findIndex(b => b.id === beatId);
         if (index === -1) return null;
 
-        const updatedBeat = { 
+        const updatedBeat = {
             ...this.currentState[index],
             ...updates,
             percentOfStory: this.validatePercent(updates.percentOfStory)
@@ -127,11 +127,11 @@ export const BeatState = {
         this.currentState.splice(index, 1);
         this.updateSequences();
         this.setDirty(true);
-        
+
         if (this.selectedBeatId === beatId) {
             this.clearSelection();
         }
-        
+
         return true;
     },
 
@@ -252,12 +252,12 @@ export const BeatState = {
             $('#noBeatSelected').addClass('d-none');
             $('#beatDetails').removeClass('d-none');
             $('#sequenceBadge').removeClass('d-none');
-            
+
             $('#beatDetailsTitle').text(beat.name);
             $('#beatSequence').text(beat.sequence);
             $('#beatDescription').val(beat.description);
             $('#beatPercent').val(beat.percentOfStory);
-            
+
             $('.dd-item').removeClass('selected');
             $(`.dd-item[data-id="${beat.id}"]`).addClass('selected');
         } else {

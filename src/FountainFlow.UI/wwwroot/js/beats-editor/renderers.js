@@ -7,23 +7,27 @@ import { EventHandlers } from './event-handlers.js';
  */
 const TEMPLATES = {
     beatItem: (beat, isSelected) => `
-        <li class="dd-item ${isSelected ? 'selected' : ''}" data-id="${beat.id}">
-            <div class="dd-handle">
-                <i class="fas fa-grip-vertical"></i>
+    <li class="dd-item ${isSelected ? 'selected' : ''}" data-id="${beat.id}">
+        <div class="dd-handle">
+            <i class="fas fa-grip-vertical"></i>
+        </div>
+        <div class="dd-content d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center">
+                <div class="beat-name">${beat.name}</div>
+                <button class="btn btn-link btn-xs edit-name ms-2" data-beat-id="${beat.id}">
+                    <i class="fa fa-pencil"></i>
+                </button>
             </div>
-            <div class="dd-content d-flex justify-content-between align-items-center">
-                <div class="d-flex align-items-center">
-                    <div class="beat-name">${beat.name}</div>
-                    <button class="btn btn-link btn-xs edit-name ms-2" data-beat-id="${beat.id}">
-                        <i class="fa fa-pencil"></i>
-                    </button>
-                </div>
+            <div class="d-flex align-items-center justify-content-end" style="gap: 10px; min-width: 70px;">
                 <button class="btn btn-danger btn-xs delete-beat" data-beat-id="${beat.id}">
                     <i class="fa fa-trash"></i>
                 </button>
+                <span id="beatPercentValue-${beat.id}" class="font-bold text-end">${beat.percentOfStory || 0}%</span>
             </div>
-        </li>
-    `,
+        </div>
+    </li>
+`
+    ,
 
     editNameControls: (currentValue) => `
         <div class="d-flex align-items-center edit-name-controls">
@@ -40,22 +44,25 @@ const TEMPLATES = {
     `,
 
     detailPanel: (beat) => `
-        <div class="form-group">
-            <label class="font-bold">Description</label>
+    <div class="form-group d-flex align-items-start">
+        <!-- Beat Description: 80% width -->
+        <div class="flex-grow-1 me-3" style="width: 80%;">
+            <label class="font-bold">Prompt</label>
             <textarea id="beatDescription" 
                       class="form-control" 
-                      rows="3">${beat.description || ''}</textarea>
+                      rows="10">${beat.description || ''}</textarea>
         </div>
-        <div class="form-group mt-3">
-            <label class="font-bold">Percent of Story</label>
-            <input type="number" 
-                   id="beatPercent" 
-                   class="form-control" 
-                   min="0" 
-                   max="100" 
-                   value="${beat.percentOfStory || 0}">
+        
+        <!-- Knob and Label: 20% width -->
+        <div style="width: 20%; text-align: center;">
+            <label for="beatPercentKnob" class="d-block font-bold mt-2">Percent of Story</label>        
+            <input type="text" id="beatPercentKnob" value="${beat.percentOfStory || 0}" class="dial">
+            <label for="beatPercentKnob" class="d-block font-bold mt-2">Coverage</label>
+            <span id="dynamicKnobLabel" class="d-block mt-2 font-bold" style="font-size: 3em; line-height: 1;">0%</span>
+            <input type="hidden" id="beatPercent" name="beatPercent" value="${beat.percentOfStory || 0}">
         </div>
-    `
+    </div>
+`
 };
 
 /**
@@ -121,7 +128,7 @@ export const Renderers = {
     renderNameEditControls(beatNameElement, currentValue) {
         const controls = $(TEMPLATES.editNameControls(currentValue));
         beatNameElement.hide().after(controls);
-        
+
         // Focus the input and select its content
         const input = controls.find('input');
         input.focus().select();
@@ -143,7 +150,32 @@ export const Renderers = {
         // Update main content
         const detailsContainer = $('#beatDetails');
         detailsContainer.html(TEMPLATES.detailPanel(beat));
-        
+
+        // Initialize the knob for #beatPercentKnob
+        $('#beatPercentKnob').knob({
+            'min': 0,
+            'max': 100,
+            'width': 120,
+            'height': 120,
+            'thickness': 0.3,
+            'fgColor': "#1AB394",
+            'bgColor': "#EEEEEE",
+            'cursor': true,
+            'release': (value) => {
+                console.log("Knob value: " + value);
+                $('#beatPercent').val(value); // Update the hidden field
+                const selectedBeat = BeatState.getSelectedBeat();
+                if (selectedBeat) {
+                    BeatState.updateBeat(selectedBeat.id, { percentOfStory: value });
+                    $(`#beatPercentValue-${selectedBeat.id}`).text(`${value}%`); // Update the list
+                }
+
+                this.updateDynamicKnobLabel();
+            }
+        });
+
+        this.updateDynamicKnobLabel();
+
         // Show/hide appropriate sections
         $('#noBeatSelected').addClass('d-none');
         detailsContainer.removeClass('d-none');
@@ -155,12 +187,25 @@ export const Renderers = {
      */
     updateDetailPanelHeader(beat) {
         $('#beatDetailsTitle').text(beat.name);
-        
+
         const sequenceBadge = $('#sequenceBadge');
         $('#beatSequence').text(beat.sequence);
         sequenceBadge.removeClass('d-none');
     },
+    updateDynamicKnobLabel() {
+        const beats = BeatState.getCurrentState(); // Retrieve all beats
+        const totalPercent = beats.reduce((sum, beat) => sum + (beat.percentOfStory || 0), 0);
 
+        const label = $('#dynamicKnobLabel');
+        label.text(`${totalPercent}%`);
+
+        // Update label styling based on the totalPercent
+        if (totalPercent === 100) {
+            label.removeClass('text-danger').addClass('text-primary'); // Green
+        } else {
+            label.removeClass('text-primary').addClass('text-danger'); // Red
+        }
+    },
     /**
      * Render empty detail panel
      */
@@ -209,6 +254,8 @@ export const Renderers = {
         } else {
             this.renderEmptyDetailPanel();
         }
+
+        this.updateDynamicKnobLabel();
     }
 };
 

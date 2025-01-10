@@ -6,18 +6,30 @@
 }
 
 <div class="row wrapper border-bottom white-bg page-heading">
-    <div class="col-lg-8">
+    <div class="col-lg-6">
         <h1>Edit Story Structure</h1>
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
                 <li class="breadcrumb-item"><a asp-controller="Archetypes" asp-action="Archetypes">Archetypes</a></li>
-                <li class="breadcrumb-item active" aria-current="page">@Model.Domain - Edit Structure</li>
+                <li class="breadcrumb-item active" aria-current="page">Edit Structure</li>
             </ol>
         </nav>
     </div>
-    <div class="col-lg-4">
-        <div class="title-action">
+    <div class="col-lg-6">
+        <div class="title-action d-flex justify-content-end align-items-center">
+            <!-- Icon -->
+            <div class="text-center mb-3 me-4">
+                <img src="@Url.Content($"~/Images/{Model.Icon}")" alt="@Model.Domain" class="rounded-circle img-fluid"
+                    style="max-width: 80px; max-height: 80px;">
+            </div>
+            <!-- Domain / Architect -->
+            <div class="me-3 d-flex align-items-center" style="font-size: 1.5em;">
+                <span style="margin-right: 8px;">@Model.Domain</span>
+                <span style="margin-right: 8px;">/</span>
+                <span>@Model.Architect</span>
+            </div>
+            <!-- Save Changes Button -->
             <button class="btn btn-secondary" type="button" id="saveChangesBtn" disabled>
                 <i class="fa fa-save"></i> Save Changes
             </button>
@@ -29,32 +41,7 @@
 
     <div class="row">
         <div class="row h-100">
-            <div class="col-lg-2">
-                <div class="ibox h-100">
-                    <div class="ibox-title">
-                        <h5>Archetype Details</h5>
-                    </div>
-                    <div class="ibox-content">
-                        <div class="text-center mb-3">
-                            <img src="@Url.Content($"~/Images/{Model.Icon}")" alt="@Model.Domain"
-                                class="rounded-circle img-fluid" style="max-width: 80px; max-height: 80px;">
-                        </div>
-                        <div class="form-group">
-                            <label class="font-bold">Domain</label>
-                            <p class="form-control-static">@Model.Domain</p>
-                        </div>
-                        <div class="form-group mt-2">
-                            <label class="font-bold">Architect</label>
-                            <p class="form-control-static">@Model.Architect</p>
-                        </div>
-                        <div class="form-group mt-2">
-                            <label class="font-bold">Description</label>
-                            <p class="form-control-static small">@Model.Description</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-10">
+            <div class="col-lg-12">
                 <div class="ibox h-100">
                     <div class="ibox-title d-flex justify-content-between align-items-center">
                         <h5 id="beatDetailsTitle" class="mb-0">Beat Details</h5>
@@ -70,7 +57,8 @@
                             </div>
                             <div class="form-group mt-3">
                                 <label class="font-bold">Percent of Story</label>
-                                <input type="number" id="beatPercent" class="form-control" min="0" max="100">
+                                <input type="text" id="beatPercentKnob" value="50" class="dial">
+                                <input type="hidden" id="beatPercent" name="beatPercent" value="50">
                             </div>
                         </div>
                         <div id="noBeatSelected" class="text-center text-muted py-5">
@@ -88,9 +76,14 @@
             <div class="ibox">
                 <div class="ibox-title d-flex justify-content-between align-items-center">
                     <h5>Story Beats</h5>
-                    <button class="btn btn-primary" type="button" id="addBeatBtn">
-                        <i class="fa fa-plus"></i> Add Beat
-                    </button>
+                    <div class="d-flex align-items-center">
+                        <button id="distributeCoverageBtn" class="btn btn-primary me-2">
+                            <i class="fa fa-pie-chart me-1"></i> Distribute Coverage
+                        </button>
+                        <button id="addBeatBtn" class="btn btn-success">
+                            <i class="fa fa-plus me-1"></i> Add Beat
+                        </button>
+                    </div>
                 </div>
                 <div class="ibox-content">
                     <div class="beats-container">
@@ -130,7 +123,8 @@
         import '/js/beats-editor/index.js';
 
         // Make archetypeId available globally
-        window.archetypeId = '@Model.ArchetypeId';
+        //window.archetypeId = '@Model.ArchetypeId';        
+        window.archetypeId = '@(Model.ArchetypeId != Guid.Empty ? Model.ArchetypeId.ToString() : "null")';
 
         $(document).ready(function () {
             // Initialize the beat editor
