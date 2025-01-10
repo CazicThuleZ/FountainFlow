@@ -21,9 +21,6 @@
             <button class="btn btn-secondary" type="button" id="saveChangesBtn" disabled>
                 <i class="fa fa-save"></i> Save Changes
             </button>
-            <button class="btn btn-primary" type="button" id="addBeatBtn">
-                <i class="fa fa-plus"></i> Add Beat
-            </button>
         </div>
     </div>
 </div>
@@ -89,8 +86,11 @@
     <div class="row mt-4">
         <div class="col-lg-12">
             <div class="ibox">
-                <div class="ibox-title">
+                <div class="ibox-title d-flex justify-content-between align-items-center">
                     <h5>Story Beats</h5>
+                    <button class="btn btn-primary" type="button" id="addBeatBtn">
+                        <i class="fa fa-plus"></i> Add Beat
+                    </button>
                 </div>
                 <div class="ibox-content">
                     <div class="beats-container">
@@ -126,31 +126,29 @@
 
 @section Scripts {
     <script src="~/js/utils.js"></script>
-    <script src="~/js/beatsEditor.js"></script>
-    <script>
-        // Make model data available to JavaScript
-        const archetypeId = '@Model.ArchetypeId';
-        const initialBeats = @Json.Serialize(Model.Beats);
+    <script type="module">
+        import '/js/beats-editor/index.js';
+
+        // Make archetypeId available globally
+        window.archetypeId = '@Model.ArchetypeId';
 
         $(document).ready(function () {
             // Initialize the beat editor
-            BeatEditor.initialize(initialBeats);
+            BeatEditor.initialize(@Json.Serialize(Model.Beats));
 
-            // Add Beat button handler
             $('#addBeatBtn').click(function () {
                 BeatEditor.addBeat();
             });
 
-            // Save Changes button handler
             $('#saveChangesBtn').click(async function () {
                 if (!BeatEditor.hasUnsavedChanges()) return;
 
                 try {
                     const saveButton = $(this);
-                    saveButton.prop('disabled', true);
-                    saveButton.html('<i class="fas fa-spinner fa-spin me-1"></i> Saving...');
+                    BeatEditor.setDirty(false);
+                    saveButton.prop('disabled', true)
+                        .html('<i class="fas fa-spinner fa-spin me-1"></i> Saving...');
 
-                    console.log('Saving changes:', JSON.stringify(BeatEditor.getChanges()));
                     const response = await $.ajax({
                         url: '@Url.Action("SaveBeats", "Archetypes")',
                         type: 'POST',
@@ -159,7 +157,6 @@
                     });
 
                     if (response.success) {
-                        BeatEditor.setDirty(false);
                         showToast('Success', 'Changes saved successfully', 'success');
                     } else {
                         showToast('Error', response.message || 'Failed to save changes', 'error');
@@ -169,8 +166,8 @@
                     showToast('Error', 'Failed to save changes', 'error');
                 } finally {
                     const saveButton = $('#saveChangesBtn');
-                    saveButton.prop('disabled', false);
-                    saveButton.html('<i class="fa fa-save"></i> Save Changes');
+                    saveButton.prop('disabled', false)
+                        .html('<i class="fa fa-save"></i> Save Changes');
                 }
             });
 
