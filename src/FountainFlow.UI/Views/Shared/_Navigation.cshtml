@@ -20,14 +20,11 @@
                 </div>
             </li>
             <li class="@Html.IsSelected(controller: "Archetype")">
-                <a href="#" aria-expanded="false"><i class="fa fa-bar-chart-o"></i> <span class="nav-label" data-i18n="nav.graphs">Archetypes</span><span class="fa arrow"></span></a>
-                <ul class="nav nav-second-level collapse @Html.IsSelected(controller: "Graphs", cssClass: "in")">
-                    <li class="@Html.IsSelected(action: "Archetypes")"><a href="@Url.Action("Archetypes", "Archetypes")">Catalog</a></li>
-                </ul>
+                <a href="@Url.Action("Archetypes", "Archetypes")"><i class="fa fa-cogs"></i> <span class="nav-label" data-i18n="nav.metrics">Archetype</span> </a>
             </li>
             <li class="@Html.IsSelected(controller: "Character")">
                 <a href="@Url.Action("Index", "Character")"><i class="fa fa-pie-chart"></i> <span class="nav-label" data-i18n="nav.metrics">Character</span> </a>
-            </li>
+            </li>            
             <li>
                 <a href="#"><i class="fa fa-sitemap"></i> <span class="nav-label" data-i18n="nav.menulevels">Iterate </span><span class="fa arrow"></span></a>
                 <ul class="nav nav-second-level">
