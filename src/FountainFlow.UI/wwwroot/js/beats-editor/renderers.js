@@ -1,33 +1,31 @@
 // renderers.js
 import { BeatState } from './state.js';
-import { EventHandlers } from './event-handlers.js';
 
 /**
  * Constants for rendering
  */
 const TEMPLATES = {
     beatItem: (beat, isSelected) => `
-    <li class="dd-item ${isSelected ? 'selected' : ''}" data-id="${beat.id}">
-        <div class="dd-handle">
-            <i class="fas fa-grip-vertical"></i>
-        </div>
-        <div class="dd-content d-flex justify-content-between align-items-center">
-            <div class="d-flex align-items-center">
-                <div class="beat-name">${beat.name}</div>
-                <button class="btn btn-link btn-xs edit-name ms-2" data-beat-id="${beat.id}">
-                    <i class="fa fa-pencil"></i>
-                </button>
+        <li class="dd-item ${isSelected ? 'selected' : ''}" data-id="${beat.id}">
+            <div class="dd-handle">
+                <i class="fas fa-grip-vertical"></i>
             </div>
-            <div class="d-flex align-items-center justify-content-end" style="gap: 10px; min-width: 70px;">
-                <button class="btn btn-danger btn-xs delete-beat" data-beat-id="${beat.id}">
-                    <i class="fa fa-trash"></i>
-                </button>
-                <span id="beatPercentValue-${beat.id}" class="font-bold text-end">${beat.percentOfStory || 0}%</span>
+            <div class="dd-content d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                    <div class="beat-name">${beat.name}</div>
+                    <button class="btn btn-link btn-xs edit-name ms-2" data-beat-id="${beat.id}">
+                        <i class="fa fa-pencil"></i>
+                    </button>
+                </div>
+                <div class="d-flex align-items-center justify-content-end" style="gap: 10px; min-width: 70px;">
+                    <button class="btn btn-danger btn-xs delete-beat" data-beat-id="${beat.id}">
+                        <i class="fa fa-trash"></i>
+                    </button>
+                    <span id="beatPercentValue-${beat.id}" class="font-bold text-end">${beat.percentOfStory || 0}%</span>
+                </div>
             </div>
-        </div>
-    </li>
-`
-    ,
+        </li>
+    `,
 
     editNameControls: (currentValue) => `
         <div class="d-flex align-items-center edit-name-controls">
@@ -44,25 +42,20 @@ const TEMPLATES = {
     `,
 
     detailPanel: (beat) => `
-    <div class="form-group d-flex align-items-start">
-        <!-- Beat Description: 80% width -->
-        <div class="flex-grow-1 me-3" style="width: 80%;">
-            <label class="font-bold">Prompt</label>
-            <textarea id="beatDescription" 
-                      class="form-control" 
-                      rows="10">${beat.description || ''}</textarea>
+        <div class="form-group">
+            <label class="font-bold">Description</label>
+            <textarea id="beatDescription" class="form-control" rows="3">${beat.description || ''}</textarea>
         </div>
-        
-        <!-- Knob and Label: 20% width -->
-        <div style="width: 20%; text-align: center;">
-            <label for="beatPercentKnob" class="d-block font-bold mt-2">Percent of Story</label>        
+        <div class="form-group mt-3">
+            <label class="font-bold">Prompt</label>
+            <textarea id="beatPrompt" class="form-control" rows="3">${beat.prompt || ''}</textarea>
+        </div>
+        <div class="form-group mt-3">
+            <label class="font-bold">Percent of Story</label>
             <input type="text" id="beatPercentKnob" value="${beat.percentOfStory || 0}" class="dial">
-            <label for="beatPercentKnob" class="d-block font-bold mt-2">Coverage</label>
-            <span id="dynamicKnobLabel" class="d-block mt-2 font-bold" style="font-size: 3em; line-height: 1;">0%</span>
             <input type="hidden" id="beatPercent" name="beatPercent" value="${beat.percentOfStory || 0}">
         </div>
-    </div>
-`
+    `
 };
 
 /**
@@ -75,11 +68,25 @@ export const Renderers = {
     renderBeats() {
         const container = $('.beats-container');
         container.empty();
-
+    
         const nestableList = this.createNestableList();
         container.append(nestableList);
-
+    
         this.initializeNestable();
+    
+        // If there's a newly added beat (it will have a temp_ id)
+        const newBeat = BeatState.getCurrentState().find(b => b.id.startsWith('temp_'));
+        if (newBeat) {
+            // Scroll container to top
+            container.scrollTop(0);
+            
+            // Optional: highlight the new beat briefly
+            const newBeatElement = $(`.dd-item[data-id="${newBeat.id}"]`);
+            newBeatElement.addClass('highlight-new');
+            setTimeout(() => {
+                newBeatElement.removeClass('highlight-new');
+            }, 1500);
+        }
     },
 
     /**
@@ -91,31 +98,79 @@ export const Renderers = {
             .addClass('dd')
             .attr('id', 'beats-list');
 
-        const beatsList = $('<ol>').addClass('dd-list');
-
-        BeatState.getCurrentState()
-            .sort((a, b) => a.sequence - b.sequence)
-            .forEach(beat => {
-                const isSelected = beat.id === BeatState.selectedBeatId;
-                const beatItem = $(TEMPLATES.beatItem(beat, isSelected));
-                beatsList.append(beatItem);
-            });
-
+        const beatsList = this.createBeatsHierarchy();
         return nestableList.append(beatsList);
     },
+
+    createBeatsHierarchy() {
+        const rootList = $('<ol>').addClass('dd-list');
+        const beats = BeatState.getCurrentState();
+
+        // Get parent beats (no child sequence)
+        const parentBeats = beats
+            .filter(b => !b.childSequence)
+            .sort((a, b) => a.parentSequence - b.parentSequence);
+
+        parentBeats.forEach(parentBeat => {
+            const parentItem = $(TEMPLATES.beatItem(parentBeat, parentBeat.id === BeatState.selectedBeatId));
+
+            // Find and add child beats
+            const childBeats = beats
+                .filter(b => b.parentSequence === parentBeat.parentSequence && b.childSequence && !b.grandchildSequence)
+                .sort((a, b) => a.childSequence - b.childSequence);
+
+            if (childBeats.length > 0) {
+                const childList = $('<ol>').addClass('dd-list');
+                childBeats.forEach(childBeat => {
+                    const childItem = $(TEMPLATES.beatItem(childBeat, childBeat.id === BeatState.selectedBeatId));
+
+                    // Find and add grandchild beats
+                    const grandchildBeats = beats
+                        .filter(b => 
+                            b.parentSequence === parentBeat.parentSequence && 
+                            b.childSequence === childBeat.childSequence && 
+                            b.grandchildSequence
+                        )
+                        .sort((a, b) => a.grandchildSequence - b.grandchildSequence);
+
+                    if (grandchildBeats.length > 0) {
+                        const grandchildList = $('<ol>').addClass('dd-list');
+                        grandchildBeats.forEach(grandchildBeat => {
+                            grandchildList.append(TEMPLATES.beatItem(grandchildBeat, grandchildBeat.id === BeatState.selectedBeatId));
+                        });
+                        childItem.append(grandchildList);
+                    }
+
+                    childList.append(childItem);
+                });
+                parentItem.append(childList);
+            }
+
+            rootList.append(parentItem);
+        });
+
+        return rootList;
+    },    
 
     /**
      * Initialize the Nestable2 plugin
      */
     initializeNestable() {
         $('#beats-list').nestable({
-            maxDepth: 1,
+            maxDepth: 3,
+            group: 1,
             handleClass: 'dd-handle',
             callback: (l, e) => {
                 const items = $('#beats-list').nestable('serialize');
-                const newOrder = items.map(item => item.id);
-                BeatState.reorderBeats(newOrder);
+                console.log('Nestable structure before processing:', items);
+                BeatState.reorderBeats(items);
+                console.log('Current state after reorder:', BeatState.getCurrentState());
                 this.renderBeats();
+            },
+            beforeDragStop: (l, e, p) => {
+                // Log information about the drop
+                console.log('Drop target:', p);
+                return true; // Allow the drop
             }
         });
     },
@@ -144,14 +199,11 @@ export const Renderers = {
             return;
         }
 
-        // Update title and sequence badge
         this.updateDetailPanelHeader(beat);
-
-        // Update main content
+        
         const detailsContainer = $('#beatDetails');
         detailsContainer.html(TEMPLATES.detailPanel(beat));
 
-        // Initialize the knob for #beatPercentKnob
         $('#beatPercentKnob').knob({
             'min': 0,
             'max': 100,
@@ -162,21 +214,14 @@ export const Renderers = {
             'bgColor': "#EEEEEE",
             'cursor': true,
             'release': (value) => {
-                console.log("Knob value: " + value);
-                $('#beatPercent').val(value); // Update the hidden field
-                const selectedBeat = BeatState.getSelectedBeat();
-                if (selectedBeat) {
-                    BeatState.updateBeat(selectedBeat.id, { percentOfStory: value });
-                    $(`#beatPercentValue-${selectedBeat.id}`).text(`${value}%`); // Update the list
-                }
-
+                $('#beatPercent').val(value);
+                BeatState.updateBeat(beat.id, { percentOfStory: value });
+                $(`#beatPercentValue-${beat.id}`).text(`${value}%`);
                 this.updateDynamicKnobLabel();
             }
         });
 
         this.updateDynamicKnobLabel();
-
-        // Show/hide appropriate sections
         $('#noBeatSelected').addClass('d-none');
         detailsContainer.removeClass('d-none');
     },
@@ -188,8 +233,16 @@ export const Renderers = {
     updateDetailPanelHeader(beat) {
         $('#beatDetailsTitle').text(beat.name);
 
+        let sequenceText = `${beat.parentSequence}`;
+        if (beat.childSequence) {
+            sequenceText += `.${beat.childSequence}`;
+            if (beat.grandchildSequence) {
+                sequenceText += `.${beat.grandchildSequence}`;
+            }
+        }
+
         const sequenceBadge = $('#sequenceBadge');
-        $('#beatSequence').text(beat.sequence);
+        $('#beatSequence').text(sequenceText);
         sequenceBadge.removeClass('d-none');
     },
     updateDynamicKnobLabel() {

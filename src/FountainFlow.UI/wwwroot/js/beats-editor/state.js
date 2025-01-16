@@ -6,23 +6,20 @@
 const STATE_DEFAULTS = {
     MIN_PERCENT: 0,
     MAX_PERCENT: 100,
-    DEFAULT_SEQUENCE: 1
+    MAX_DEPTH: 3
 };
 
 /**
  * BeatState manages the application state for the beat editor
  */
 export const BeatState = {
-    // Core state properties
+    // Core state properties remain the same
     originalState: [],
     currentState: [],
     isDirty: false,
     selectedBeatId: null,
 
-    /**
-     * Initialize the state with beats data
-     * @param {Array} beats - Initial beats data
-     */
+    // Initialization remains largely the same
     initialize(beats) {
         if (!Array.isArray(beats)) {
             throw new Error('Beats must be an array');
@@ -55,7 +52,7 @@ export const BeatState = {
      * @returns {Object|null} Currently selected beat or null
      */
     getSelectedBeat() {
-        return this.selectedBeatId ? this.getBeatById(this.selectedBeatId) : null;
+        return this.currentState.find(beat => beat.id === this.selectedBeatId) || null;
     },
 
     /**
@@ -85,11 +82,46 @@ export const BeatState = {
             throw new Error('Invalid beat object');
         }
 
+        // Set default sequence values
+        beat.parentSequence = this.getNextParentSequence();
+        beat.childSequence = null;
+        beat.grandchildSequence = null;
+
         this.currentState.push(beat);
         this.setDirty(true);
         return beat;
     },
+    getNextParentSequence() {
 
+        const currentBeats = this.currentState;
+
+        // Increment all existing beats' parent sequences
+        currentBeats.forEach(beat => {
+            if (!beat.childSequence) {  // Only adjust parent beats
+                beat.parentSequence += 1;
+            }
+        });
+
+        return 1;  // New beat will always be sequence 1
+    },
+    getNextChildSequence(parentSequence) {
+        const siblings = this.currentState.filter(
+            b => b.parentSequence === parentSequence && b.childSequence !== null
+        );
+        return siblings.length > 0
+            ? Math.max(...siblings.map(b => b.childSequence)) + 1
+            : 1;
+    },
+    getNextGrandchildSequence(parentSequence, childSequence) {
+        const siblings = this.currentState.filter(
+            b => b.parentSequence === parentSequence &&
+                b.childSequence === childSequence &&
+                b.grandchildSequence !== null
+        );
+        return siblings.length > 0
+            ? Math.max(...siblings.map(b => b.grandchildSequence)) + 1
+            : 1;
+    },
     /**
      * Update an existing beat
      * @param {string} beatId - ID of beat to update
@@ -148,17 +180,54 @@ export const BeatState = {
      * Reorder beats based on new sequence
      * @param {Array} newOrder - Array of beat IDs in new order
      */
-    reorderBeats(newOrder) {
-        if (!Array.isArray(newOrder)) {
-            throw new Error('New order must be an array');
-        }
-
-        this.currentState.sort((a, b) => {
-            return newOrder.indexOf(a.id) - newOrder.indexOf(b.id);
-        });
-
-        this.updateSequences();
+    reorderBeats(nestableData) {
+        // Recursively process nestable data and update sequences
+        this.updateSequencesFromNestable(nestableData);
         this.setDirty(true);
+    },
+
+    updateSequencesFromNestable(items, parentSequence = null, childSequence = null) {
+        console.log('Processing items:', items, 'parentSeq:', parentSequence, 'childSeq:', childSequence);  // Debug log
+
+        items.forEach((item, index) => {
+            const beat = this.getBeatById(item.id);
+            if (!beat) return;
+
+            if (!parentSequence) {
+                // Top level
+                beat.parentSequence = index + 1;
+                beat.childSequence = null;
+                beat.grandchildSequence = null;
+            } else if (!childSequence) {
+                // Second level
+                beat.parentSequence = parentSequence;
+                beat.childSequence = index + 1;
+                beat.grandchildSequence = null;
+            } else {
+                // Third level
+                beat.parentSequence = parentSequence;
+                beat.childSequence = childSequence;
+                beat.grandchildSequence = index + 1;
+            }
+
+            console.log('Updated beat:', { ...beat });  // Debug log
+
+            // Process children if they exist
+            if (item.children && item.children.length > 0) {
+                if (!parentSequence) {
+                    // If we're at top level, process children as second level
+                    this.updateSequencesFromNestable(item.children, beat.parentSequence);
+                } else if (!childSequence) {
+                    // If we're at second level, process children as third level
+                    this.updateSequencesFromNestable(
+                        item.children,
+                        beat.parentSequence,
+                        beat.childSequence
+                    );
+                }
+                // No need to process children at third level as we don't allow a fourth level
+            }
+        });
     },
 
     /**
@@ -168,6 +237,10 @@ export const BeatState = {
     setSelectedBeat(beatId) {
         this.selectedBeatId = beatId;
         this.notifySelectionChange();
+
+        // Log the selected beat details for debugging
+        const selectedBeat = this.getSelectedBeat();
+        console.log('Selected Beat:', selectedBeat);
     },
 
     /**
@@ -184,16 +257,35 @@ export const BeatState = {
      * @returns {boolean} True if beat is valid
      */
     validateBeat(beat) {
-        return (
-            beat &&
+        if (!beat) return false;
+
+        const basicValidation = (
             typeof beat.id === 'string' &&
             typeof beat.name === 'string' &&
             typeof beat.description === 'string' &&
-            typeof beat.sequence === 'number' &&
             typeof beat.percentOfStory === 'number' &&
             beat.percentOfStory >= STATE_DEFAULTS.MIN_PERCENT &&
             beat.percentOfStory <= STATE_DEFAULTS.MAX_PERCENT
         );
+
+        if (!basicValidation) return false;
+
+        // Validate sequence hierarchy
+        if (typeof beat.parentSequence !== 'number' || beat.parentSequence < 1) {
+            return false;
+        }
+
+        if (beat.childSequence !== null &&
+            (typeof beat.childSequence !== 'number' || beat.childSequence < 1)) {
+            return false;
+        }
+
+        if (beat.grandchildSequence !== null &&
+            (typeof beat.grandchildSequence !== 'number' || beat.grandchildSequence < 1)) {
+            return false;
+        }
+
+        return true;
     },
 
     /**
@@ -212,17 +304,19 @@ export const BeatState = {
      */
     getChanges() {
         return {
-            archetypeId: window.archetypeId, // Assuming this is globally available
+            archetypeId: window.archetypeId,
             beats: this.currentState.map(beat => ({
                 id: beat.id,
                 name: beat.name,
                 description: beat.description,
-                sequence: beat.sequence,
+                prompt: beat.prompt,
+                parentSequence: beat.parentSequence,
+                childSequence: beat.childSequence,
+                grandchildSequence: beat.grandchildSequence,
                 percentOfStory: beat.percentOfStory
             }))
         };
     },
-
     /**
      * Reset state to original
      */

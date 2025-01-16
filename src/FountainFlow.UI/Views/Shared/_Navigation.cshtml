@@ -22,6 +22,9 @@
             <li class="@Html.IsSelected(controller: "Archetype")">
                 <a href="@Url.Action("Archetypes", "Archetypes")"><i class="fa fa-cogs"></i> <span class="nav-label" data-i18n="nav.metrics">Archetype</span> </a>
             </li>
+            <li class="@Html.IsSelected(controller: "Logline")">
+                <a href="@Url.Action("Index", "Logline")"><i class="fa fa-align-justify"></i> <span class="nav-label" data-i18n="nav.metrics">Logline</span> </a>
+            </li>                        
             <li class="@Html.IsSelected(controller: "Character")">
                 <a href="@Url.Action("Index", "Character")"><i class="fa fa-pie-chart"></i> <span class="nav-label" data-i18n="nav.metrics">Character</span> </a>
             </li>            

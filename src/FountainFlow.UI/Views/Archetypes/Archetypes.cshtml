@@ -100,6 +100,10 @@
 
     @await Html.PartialAsync("_CreateArchetypePartial", new ArchetypeViewModel())
 
+    @section Styles {
+        <link rel="stylesheet" href="~/css/archetype-details.css" />
+    }    
+
     @section Scripts {
         <script>
             // Initialize tooltips

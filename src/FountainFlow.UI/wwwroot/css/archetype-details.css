@@ -1,0 +1,55 @@
+.story-structure {
+    padding: 20px;
+    background: #fff;
+}
+
+.structure-container {
+    max-width: 100%;
+    margin: 0 auto;
+}
+
+.story-beats {
+    margin-top: 20px;
+}
+
+.story-beat {
+    background: #fff;
+    border: 1px solid #e7eaec;
+    border-radius: 4px;
+    margin-bottom: 15px;
+}
+
+.beat-content {
+    padding: 15px;
+}
+
+.beat-title {
+    font-weight: 600;
+    margin: 0 0 10px 0;
+    color: #2f4050;
+}
+
+.beat-text {
+    color: #676a6c;
+    margin: 0;
+}
+
+.story-beat-children {
+    margin-left: 40px;
+    padding-left: 15px;
+    border-left: 2px solid #e7eaec;
+}
+
+.story-beat-grandchildren {
+    margin-left: 40px;
+    padding-left: 15px;
+    border-left: 2px solid #e7eaec;
+}
+
+.child-beat {
+    background: #fafbfc;
+}
+
+.grandchild-beat {
+    background: #f3f3f4;
+}

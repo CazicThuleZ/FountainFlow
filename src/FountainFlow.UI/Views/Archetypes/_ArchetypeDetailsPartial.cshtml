@@ -36,32 +36,133 @@
 
         <!-- Tab Content -->
         <div class="tab-content mt-3">
-            <!-- Story Beats Tab -->
             <div class="tab-pane fade show active" id="story-beats" role="tabpanel" aria-labelledby="story-beats-tab">
                 <div class="text-center mb-4">
                     <button title="Edit Structure" type="button" class="btn btn-primary" data-archetype-id="@Model.Id">
                         <i class="fa fa-edit me-2"></i>Edit Structure
                     </button>
                 </div>
-                <div class="client-detail">
-                    <div class="full-height-scroll">
-                        <strong>Beat / Sequence</strong>
-                        <div id="vertical-timeline" class="vertical-container dark-timeline">
-                            @foreach (var beat in @Model.Beats)
-                            {
-                                <div class="vertical-timeline-block">
-                                    <div class="vertical-timeline-icon gray-bg">
-                                        <i class="fa fa-coffee"></i>
-                                    </div>
-                                    <div class="vertical-timeline-content">
-                                        <p>@beat.Name</p>
-                                        <span class="vertical-date small text-muted">@beat.Description</span>
-                                    </div>
+<div id="beatList" class="client-detail">
+    <div class="full-height-scroll">
+        <strong>Beat / Sequence</strong>
+        
+        @{
+            // Group beats by ParentSequence
+            var parentBeats = Model.Beats
+                .Where(b => !b.ChildSequence.HasValue && !b.GrandchildSequence.HasValue)
+                .OrderBy(b => b.ParentSequence);
+            
+            foreach (var parentBeat in parentBeats)
+            {
+                <div class="row mb-3">
+                    <div class="col-lg-12">
+                        <div class="ibox">
+                            <div class="ibox-title bg-light">
+                                <h5>
+                                    <i class="fas fa-book me-2"></i>
+                                    <small class="ms-2">@parentBeat.Name (@parentBeat.ParentSequence)</small>
+                                </h5>
+                                <div class="ibox-tools">
+                                    <a class="collapse-link" data-bs-toggle="collapse" 
+                                       href="#beat@(parentBeat.Id)" role="button" 
+                                       aria-expanded="false" aria-controls="beat@(parentBeat.Id)">
+                                        <i class="fa fa-chevron-down"></i>
+                                    </a>
                                 </div>
-                            }
+                            </div>
+                            <div class="collapse" id="beat@(parentBeat.Id)">
+                                <div class="ibox-content">
+                                    <p class="text-start">@parentBeat.Description</p>
+                                    <p><em>Prompt: @parentBeat.Prompt</em></p>
+                                    <p class="text-muted">Percent of Story: @parentBeat.PercentOfStory%</p>
+                                    
+                                    @{
+                                        // Get child beats for this parent
+                                        var childBeats = Model.Beats
+                                            .Where(b => b.ParentSequence == parentBeat.ParentSequence && 
+                                                      b.ChildSequence.HasValue && 
+                                                      !b.GrandchildSequence.HasValue)
+                                            .OrderBy(b => b.ChildSequence);
+
+                                        if (childBeats.Any())
+                                        {
+                                            <div class="child-beats mt-3">
+                                                @foreach (var childBeat in childBeats)
+                                                {
+                                                    <div class="ibox mb-2">
+                                                        <div class="ibox-title bg-light">
+                                                            <h6>
+                                                                <i class="fas fa-angle-right me-2"></i>
+                                                                <small class="ms-2">@childBeat.Name (@childBeat.ParentSequence.@childBeat.ChildSequence)</small>
+                                                            </h6>
+                                                            <div class="ibox-tools">
+                                                                <a class="collapse-link" data-bs-toggle="collapse" 
+                                                                   href="#childBeat@(childBeat.Id)" aria-expanded="false">
+                                                                    <i class="fa fa-chevron-down"></i>
+                                                                </a>
+                                                            </div>
+                                                        </div>
+                                                        <div class="collapse" id="childBeat@(childBeat.Id)">
+                                                            <div class="ibox-content">
+                                                                <p class="text-start">@childBeat.Description</p>
+                                                                <p><em>Prompt: @childBeat.Prompt</em></p>
+                                                                <p class="text-muted">Percent of Story: @childBeat.PercentOfStory%</p>
+
+                                                                @{
+                                                                    // Get grandchild beats for this child
+                                                                    var grandchildBeats = Model.Beats
+                                                                        .Where(b => b.ParentSequence == childBeat.ParentSequence && 
+                                                                                  b.ChildSequence == childBeat.ChildSequence && 
+                                                                                  b.GrandchildSequence.HasValue)
+                                                                        .OrderBy(b => b.GrandchildSequence);
+
+                                                                    if (grandchildBeats.Any())
+                                                                    {
+                                                                        <div class="grandchild-beats mt-3">
+                                                                            @foreach (var grandchildBeat in grandchildBeats)
+                                                                            {
+                                                                                <div class="ibox mb-2">
+                                                                                    <div class="ibox-title bg-light">
+                                                                                        <h6>
+                                                                                            <i class="fas fa-angle-double-right me-2"></i>
+                                                                                            <small class="ms-2">@grandchildBeat.Name (@grandchildBeat.ParentSequence.@grandchildBeat.ChildSequence.@grandchildBeat.GrandchildSequence)</small>
+                                                                                        </h6>
+                                                                                        <div class="ibox-tools">
+                                                                                            <a class="collapse-link" data-bs-toggle="collapse" 
+                                                                                               href="#grandchildBeat@(grandchildBeat.Id)" aria-expanded="false">
+                                                                                                <i class="fa fa-chevron-down"></i>
+                                                                                            </a>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                    <div class="collapse" id="grandchildBeat@(grandchildBeat.Id)">
+                                                                                        <div class="ibox-content">
+                                                                                            <p class="text-start">@grandchildBeat.Description</p>
+                                                                                            <p><em>Prompt: @grandchildBeat.Prompt</em></p>
+                                                                                            <p class="text-muted">Percent of Story: @grandchildBeat.PercentOfStory%</p>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </div>
+                                                                            }
+                                                                        </div>
+                                                                    }
+                                                                }
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                }
+                                            </div>
+                                        }
+                                    }
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
+            }
+        }
+    </div>
+</div>
+
             </div>
 
             <!-- Genre Tab -->
@@ -72,56 +173,59 @@
                             <i class="fa fa-plus"></i> <span class="bold">Add New Genre</span>
                         </button>
                     </div>
-
-                    <!-- Genre List -->
-                    @foreach (var genre in Model.Genres)
-                    {
-                        <div class="row">
-                            <div class="col-lg-12">
-                                <div class="ibox">
-                                    <div class="ibox-title bg-light">
-                                        <h5><i class="fas fa-film me-2"></i> <small class="ms-2">@genre.Name</small></h5>
-                                        <div class="ibox-tools">
-                                            <a class="collapse-link" data-bs-toggle="collapse" href="#genre@(genre.Id)"
-                                                role="button" aria-expanded="true" aria-controls="genre@(genre.Id)">
-                                                <i class="fa fa-chevron-up"></i>
-                                            </a>
-                                            <div class="dropdown d-inline-block">
-                                                <a class="dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                                                    <i class="fa fa-wrench"></i>
+                    <div id="genreList">
+                        <!-- Genre List -->
+                        @foreach (var genre in Model.Genres)
+                        {
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="ibox">
+                                        <div class="ibox-title bg-light">
+                                            <h5><i class="fas fa-film me-2"></i> <small class="ms-2">@genre.Name</small>
+                                            </h5>
+                                            <div class="ibox-tools">
+                                                <a class="collapse-link" data-bs-toggle="collapse" href="#genre@(genre.Id)"
+                                                    role="button" aria-expanded="true" aria-controls="genre@(genre.Id)">
+                                                    <i class="fa fa-chevron-up"></i>
                                                 </a>
-                                                <ul class="dropdown-menu">
-                                                    <li><a class="dropdown-item" href="#">Config option 1</a></li>
-                                                    <li><a class="dropdown-item" href="#">Config option 2</a></li>
-                                                </ul>
+                                                <div class="dropdown d-inline-block">
+                                                    <a class="dropdown-toggle" href="#" role="button"
+                                                        data-bs-toggle="dropdown">
+                                                        <i class="fa fa-wrench"></i>
+                                                    </a>
+                                                    <ul class="dropdown-menu">
+                                                        <li><a class="dropdown-item" href="#">Config option 1</a></li>
+                                                        <li><a class="dropdown-item" href="#">Config option 2</a></li>
+                                                    </ul>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                    <div class="collapse" id="genre@(genre.Id)">
-                                        <div class="ibox-content">
-                                            <p class="text-start">
-                                                @genre.Description
-                                            </p>
-                                            <div class="hr-line-dashed"></div>
-                                            <div class="btn-group">
-                                                <button type="button" class="btn btn-white btn-xs" title="Edit Genre">
-                                                    <i class="fa fa-pencil me-1"></i>Edit
-                                                </button>
-                                                <button type="button" class="btn btn-white btn-xs" title="Clone Genre">
-                                                    <i class="fa fa-copy me-1"></i>Clone
-                                                </button>
-                                                <button type="button" class="btn btn-white btn-xs remove-genre-btn"
-                                                    data-genre-id="@genre.Id" data-genre-name="@genre.Name"
-                                                    title="Remove Genre">
-                                                    <i class="fa fa-link me-1"></i>Remove
-                                                </button>
+                                        <div class="collapse" id="genre@(genre.Id)">
+                                            <div class="ibox-content">
+                                                <p class="text-start">
+                                                    @genre.Description
+                                                </p>
+                                                <div class="hr-line-dashed"></div>
+                                                <div class="btn-group">
+                                                    <button type="button" class="btn btn-white btn-xs" title="Edit Genre">
+                                                        <i class="fa fa-pencil me-1"></i>Edit
+                                                    </button>
+                                                    <button type="button" class="btn btn-white btn-xs" title="Clone Genre">
+                                                        <i class="fa fa-copy me-1"></i>Clone
+                                                    </button>
+                                                    <button type="button" class="btn btn-white btn-xs remove-genre-btn"
+                                                        data-genre-id="@genre.Id" data-genre-name="@genre.Name"
+                                                        title="Remove Genre">
+                                                        <i class="fa fa-link me-1"></i>Remove
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    }
+                        }
+                    </div>
                 </div>
             </div>
         </div>

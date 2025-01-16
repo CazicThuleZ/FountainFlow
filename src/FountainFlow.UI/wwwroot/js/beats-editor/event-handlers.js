@@ -16,6 +16,7 @@ const HANDLERS = {
         EDIT_NAME: '.edit-name',
         BEAT_ITEM: '.dd-item',
         BEAT_DESCRIPTION: '#beatDescription',
+        BEAT_PROMPT: '#beatPrompt',
         BEAT_PERCENT: '#beatPercent',
         DISTRIBUTE_COVERAGE_BTN: '#distributeCoverageBtn'
     }
@@ -35,7 +36,26 @@ export const EventHandlers = {
         this.attachDetailPanelHandlers();
         this.attachNavigationHandlers();
         this.attachDistributeCoverageHandler();
+        this.attachNestableHandlers();
     },
+
+    attachNestableHandlers() {
+        $('.dd').on('change', (e) => {
+            const nestableData = $('.dd').nestable('serialize');
+            BeatState.reorderBeats(nestableData);
+            Renderers.refreshUI();
+        });
+
+        // Prevent nesting beyond maximum depth
+        $('.dd').on('dragStart', (e, item, source, destination, position) => {
+            const currentDepth = $(item).parents('.dd-list').length;
+            if (currentDepth >= 3) {
+                e.preventDefault();
+                showToast('Warning', 'Maximum nesting depth reached', 'warning');
+                return false;
+            }
+        });
+    },    
 
     /**
      * Attach delete button handlers
@@ -44,10 +64,24 @@ export const EventHandlers = {
         $(document).on('click', HANDLERS.SELECTORS.DELETE_BEAT, (e) => {
             e.stopPropagation();
             const beatId = $(e.currentTarget).data('beat-id');
+            const beat = BeatState.getBeatById(beatId);
 
-            if (confirm('Are you sure you want to delete this beat?')) {
+            if (!beat) return;
+
+            // Customize confirmation message based on beat's position
+            let message = 'Are you sure you want to delete this beat?';
+            if (beat.childSequence === null) {
+                // Parent beat
+                const hasChildren = BeatState.getCurrentState()
+                    .some(b => b.parentSequence === beat.parentSequence && b.childSequence !== null);
+                if (hasChildren) {
+                    message = 'This will also delete all nested beats. Are you sure?';
+                }
+            }
+
+            if (confirm(message)) {
                 try {
-                    BeatState.deleteBeat(beatId);
+                    this.deleteBeatAndDescendants(beatId);
                     Renderers.renderBeats();
                 } catch (error) {
                     console.error('Failed to delete beat:', error);
@@ -56,6 +90,32 @@ export const EventHandlers = {
             }
         });
     },
+    deleteBeatAndDescendants(beatId) {
+        const beat = BeatState.getBeatById(beatId);
+        if (!beat) return;
+
+        // If this is a parent beat, delete all children first
+        if (beat.childSequence === null) {
+            const children = BeatState.getCurrentState()
+                .filter(b => b.parentSequence === beat.parentSequence && b.childSequence !== null);
+            
+            children.forEach(child => this.deleteBeatAndDescendants(child.id));
+        }
+        // If this is a child beat, delete all grandchildren first
+        else if (beat.grandchildSequence === null) {
+            const grandchildren = BeatState.getCurrentState()
+                .filter(b => 
+                    b.parentSequence === beat.parentSequence && 
+                    b.childSequence === beat.childSequence && 
+                    b.grandchildSequence !== null
+                );
+            
+            grandchildren.forEach(grandchild => BeatState.deleteBeat(grandchild.id));
+        }
+
+        // Delete the beat itself
+        BeatState.deleteBeat(beatId);
+    },    
 
     /**
      * Attach name edit handlers
@@ -115,12 +175,28 @@ export const EventHandlers = {
      * Attach beat selection handlers
      */
     attachSelectionHandlers() {
-        $(document).on('click', HANDLERS.SELECTORS.BEAT_ITEM, function() {
+        $(document).on('click', '.dd-item', function(e) {
+            // Stop event from bubbling up to parent beats
+            e.stopPropagation();
+            
             const beatId = $(this).data('id');
-
+            const currentTarget = $(this);
+    
+            // Don't trigger selection if clicking handle or delete button
+            if ($(e.target).closest('.dd-handle, .delete-beat').length) {
+                return;
+            }
+    
             try {
+                // Remove selected state from all beats
+                $('.dd-item').removeClass('selected');
+                
+                // Add selected state to clicked beat
+                currentTarget.addClass('selected');
+                
                 BeatState.setSelectedBeat(beatId);
                 const selectedBeat = BeatState.getSelectedBeat();
+                
                 if (selectedBeat) {
                     Renderers.renderDetailPanel(selectedBeat);
                 }
@@ -142,9 +218,25 @@ export const EventHandlers = {
                     BeatState.updateBeat(selectedBeat.id, {
                         description: $(e.target).val()
                     });
+                  BeatState.setDirty(true);                    
                 } catch (error) {
                     console.error('Failed to update description:', error);
                     Renderers.showError('Failed to update description. Please try again.');
+                }
+            }
+        });
+
+        // Add handler for prompt field
+        $(document).on('change', HANDLERS.SELECTORS.BEAT_PROMPT, (e) => {
+            const selectedBeat = BeatState.getSelectedBeat();
+            if (selectedBeat) {
+                try {
+                    BeatState.updateBeat(selectedBeat.id, {
+                        prompt: $(e.target).val()
+                    });
+                } catch (error) {
+                    console.error('Failed to update prompt:', error);
+                    Renderers.showError('Failed to update prompt. Please try again.');
                 }
             }
         });
@@ -190,37 +282,33 @@ export const EventHandlers = {
         });
     },
     attachDistributeCoverageHandler() {
-        $(document).on('click', HANDLERS.SELECTORS.DISTRIBUTE_COVERAGE_BTN, function () {
-            // Get all beats
+        $(document).on('click', HANDLERS.SELECTORS.DISTRIBUTE_COVERAGE_BTN, () => {
             const beats = BeatState.getCurrentState();
-    
             if (!beats || beats.length === 0) {
                 console.log("No beats available to distribute coverage.");
                 return;
             }
-    
-            const totalBeats = beats.length;
-            const evenValue = Math.floor(100 / totalBeats); // Evenly distribute points
-            const remainder = 100 % totalBeats; // Remaining points to adjust
-    
-            let totalAssigned = 0;
-    
-            // Update each beat's percent value
-            beats.forEach((beat, index) => {
-                const isLastBeat = index === totalBeats - 1;
-                const newPercent = isLastBeat ? 100 - totalAssigned : evenValue; // Adjust the last beat if needed
-    
-                totalAssigned += newPercent; // Keep track of assigned points
-                BeatState.updateBeat(beat.id, { percentOfStory: newPercent });
-    
-                // Update the displayed value in the beats list
-                $(`#beatPercentValue-${beat.id}`).text(`${newPercent}%`);
-            });
-    
-            // Flag the form as dirty to enable the Save Changes button
+
+            // Calculate distribution by level
+            const distributeByLevel = (levelBeats) => {
+                const evenValue = Math.floor(100 / levelBeats.length);
+                const remainder = 100 % levelBeats.length;
+                
+                levelBeats.forEach((beat, index) => {
+                    const value = index === levelBeats.length - 1 ? 
+                        evenValue + remainder : 
+                        evenValue;
+                    
+                    BeatState.updateBeat(beat.id, { percentOfStory: value });
+                });
+            };
+
+            // Get top-level beats
+            const topLevelBeats = beats.filter(b => !b.childSequence);
+            distributeByLevel(topLevelBeats);
+
             BeatState.setDirty(true);
-    
-            console.log("Coverage distributed evenly among beats.");
+            Renderers.refreshUI();
         });
     },
     /**
@@ -231,7 +319,10 @@ export const EventHandlers = {
         $(document).off('click', HANDLERS.SELECTORS.EDIT_NAME);
         $(document).off('click', HANDLERS.SELECTORS.BEAT_ITEM);
         $(document).off('change', HANDLERS.SELECTORS.BEAT_DESCRIPTION);
+        $(document).off('change', HANDLERS.SELECTORS.BEAT_PROMPT);
         $(document).off('change', HANDLERS.SELECTORS.BEAT_PERCENT);
+        $('.dd').off('change');
+        $('.dd').off('dragStart');
         window.removeEventListener('beforeunload', this.attachNavigationHandlers);
     }
 };

@@ -27,8 +27,17 @@ namespace FountainFlowUI.DTOs
         [JsonPropertyName("description")]
         public string Description { get; set; }
 
-        [JsonPropertyName("sequence")]
-        public int Sequence { get; set; }
+        [JsonPropertyName("prompt")]
+        public string Prompt { get; set; }        
+
+        [JsonPropertyName("parentSequence")]
+        public int ParentSequence { get; set; }
+
+        [JsonPropertyName("childSequence")]
+        public int? ChildSequence { get; set; }
+
+        [JsonPropertyName("grandchildSequence")]
+        public int? GrandchildSequence { get; set; }
 
         [JsonPropertyName("percentOfStory")]
         public int PercentOfStory { get; set; }

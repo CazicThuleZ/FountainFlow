@@ -180,12 +180,25 @@ public class FFDbContext : DbContext
         {
             entity.HasKey(e => e.Id);
 
+            entity.Property(e => e.ParentSequence)
+                .IsRequired();
+
+            entity.Property(e => e.ChildSequence)
+                .IsRequired(false);
+
+            entity.Property(e => e.GrandchildSequence)
+                .IsRequired(false);
+
             entity.Property(e => e.Name)
                 .IsRequired()
                 .HasColumnType("text");
 
             entity.Property(e => e.Description)
                 .IsRequired()
+                .HasColumnType("text");
+
+            entity.Property(e => e.Prompt)
+                .IsRequired(false)
                 .HasColumnType("text");
 
             entity.Property(e => e.PercentOfStory)
@@ -196,6 +209,8 @@ public class FFDbContext : DbContext
 
             entity.Property(e => e.UpdatedUTC)
                 .HasColumnType("timestamp with time zone");
+
+            entity.HasIndex(e => new { e.ArchetypeId, e.ParentSequence, e.ChildSequence, e.GrandchildSequence });                
         });
 
         // ArchetypeGenre entity configuration

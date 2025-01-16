@@ -5,13 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - .NET Core 3.0</title>
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-
-    <!-- Add local styles, mostly for plugins css file -->
-    @if (IsSectionDefined("Styles"))
-    {
-        @RenderSection("Styles", required: false)
-    }
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">}
 
     <environment names="Development">
         <link rel="stylesheet" href="~/lib/bootstrap/css/bootstrap.min.css" />
@@ -29,8 +23,10 @@
         <link rel="stylesheet" href="~/css/style.css" asp-append-version="true" />
         <link rel="stylesheet" href="~/lib/sweetalert2/sweetalert2.min.css" />
         <link rel="stylesheet" href="~/lib/dropzone/min/dropzone.min.css" />
-        <link rel="stylesheet" href="~/lib/nestable2/dist/jquery.nestable.min.css" />        
+        <link rel="stylesheet" href="~/lib/nestable2/dist/jquery.nestable.min.css" />
     </environment>
+
+    @RenderSection("Styles", required: false)
 
 </head>
 
@@ -79,7 +75,7 @@
         <script src="~/lib/metisMenu/dist/jquery.metisMenu.js"></script>
         <script src="~/lib/slimScroll/jquery.slimscroll.js"></script>
         <script src="~/lib/nestable2/dist/jquery.nestable.min.js"></script>
-        <script src="~/lib/jquery-knob/jquery.knob.min.js"></script>        
+        <script src="~/lib/jquery-knob/jquery.knob.min.js"></script>
         <script src="~/js/script.js" asp-append-version="true"></script>
 
     </environment>
@@ -93,7 +89,7 @@
         <script src="~/lib/metisMenu/dist/jquery.metisMenu.js"></script>
         <script src="~/lib/slimScroll/jquery.slimscroll.min.js"></script>
         <script src="~/lib/nestable2/dist/jquery.nestable.min.js"></script>
-        <script src="~/lib/jquery-knob/jquery.knob.min.js"></script>        
+        <script src="~/lib/jquery-knob/jquery.knob.min.js"></script>
         <script src="~/js/script.js" asp-append-version="true"></script>
     </environment>
 

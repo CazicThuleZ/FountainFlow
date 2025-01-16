@@ -20,8 +20,17 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.ArchetypeBeats, opt => opt.Ignore())
             .ForMember(dest => dest.ArchetypeGenres, opt => opt.Ignore());
 
-        CreateMap<ArchetypeBeat, ArchetypeBeatReadDto>();
+        CreateMap<ArchetypeBeat, ArchetypeBeatReadDto>()
+            .ForMember(dest => dest.ParentSequence, opt => opt.MapFrom(src => src.ParentSequence))
+            .ForMember(dest => dest.ChildSequence, opt => opt.MapFrom(src => src.ChildSequence))
+            .ForMember(dest => dest.GrandchildSequence, opt => opt.MapFrom(src => src.GrandchildSequence))
+            .ForMember(dest => dest.Prompt, opt => opt.MapFrom(src => src.Prompt));
+
         CreateMap<ArchetypeBeatDto, ArchetypeBeat>()
+            .ForMember(dest => dest.ParentSequence, opt => opt.MapFrom(src => src.ParentSequence))
+            .ForMember(dest => dest.ChildSequence, opt => opt.MapFrom(src => src.ChildSequence))
+            .ForMember(dest => dest.GrandchildSequence, opt => opt.MapFrom(src => src.GrandchildSequence))
+            .ForMember(dest => dest.Prompt, opt => opt.MapFrom(src => src.Prompt))
             .ForMember(dest => dest.CreatedUTC, opt => opt.Ignore())
             .ForMember(dest => dest.UpdatedUTC, opt => opt.Ignore());
 

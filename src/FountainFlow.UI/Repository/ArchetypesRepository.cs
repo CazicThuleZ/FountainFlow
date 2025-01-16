@@ -13,7 +13,6 @@ public class ArchetypesRepository : IArchetypesRepository
     private readonly ILogger<ArchetypesRepository> _logger;
     private readonly string _apiBaseUrl;
     private readonly IConfiguration _configuration;
-
     public ArchetypesRepository(ILogger<ArchetypesRepository> logger, HttpClient httpClient, IConfiguration configuration)
     {
         _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
@@ -122,7 +121,6 @@ public class ArchetypesRepository : IArchetypesRepository
             _logger.LogInformation("Attempting to fetch archetype genres from API at {ApiUrl}", $"{_apiBaseUrl}/api/v1.0/ArchetypeGenres/Archetype/{archetypeId}");
             using var response = await _httpClient.GetAsync($"{_apiBaseUrl}/api/v1.0/ArchetypeGenres/Archetype/{archetypeId}");
 
-            // Check for 404 first, before ensuring success status
             if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
                 _logger.LogInformation("No genres found for archetype {ArchetypeId}", archetypeId);
@@ -172,7 +170,7 @@ public class ArchetypesRepository : IArchetypesRepository
         var archetypeId = id.ToString();
         try
         {
-            _logger.LogInformation("Attempting to fetch archetype beatss from API at {ApiUrl}", $"{_apiBaseUrl}/api/v1.0/ArchetypeBeats/Archetype/{archetypeId}");
+            _logger.LogInformation("Fetching archetype beats from API for archetype {ArchetypeId}", archetypeId);
 
             using var response = await _httpClient.GetAsync($"{_apiBaseUrl}/api/v1.0/ArchetypeBeats/Archetype/{archetypeId}");
 
@@ -184,43 +182,29 @@ public class ArchetypesRepository : IArchetypesRepository
 
             response.EnsureSuccessStatusCode();
 
-            var content = await response.Content.ReadAsStringAsync();
-
-            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
-            {
-                _logger.LogInformation("No beats found for archetype {ArchetypeId}", archetypeId);
-                return new List<ArchetypeBeatDto>();
-            }
-
-            if (string.IsNullOrEmpty(content))
-            {
-                _logger.LogWarning("API returned empty content");
-                return new List<ArchetypeBeatDto>();
-            }
-
             var archetypeBeats = await response.Content.ReadFromJsonAsync<List<ArchetypeBeatDto>>();
 
             if (!archetypeBeats.Any())
             {
-                _logger.LogWarning("Failed to deserialize archetype genres response");
+                _logger.LogWarning("No beats found in response for archetype {ArchetypeId}", archetypeId);
                 return new List<ArchetypeBeatDto>();
             }
 
-            return archetypeBeats;
+            // Order beats hierarchically
+            return archetypeBeats
+                .OrderBy(b => b.ParentSequence)
+                .ThenBy(b => b.ChildSequence)
+                .ThenBy(b => b.GrandchildSequence)
+                .ToList();
         }
         catch (HttpRequestException ex)
         {
-            _logger.LogError(ex, "HTTP request failed while fetching archetype beats. Status code: {StatusCode}", ex.StatusCode);
-            throw new RepositoryException($"Failed to fetch archetype beats for {archetypeId} ", ex);
-        }
-        catch (JsonException ex)
-        {
-            _logger.LogError(ex, "Failed to deserialize archetype genre response");
-            throw new RepositoryException("Failed to parse archetype beat data from the API", ex);
+            _logger.LogError(ex, "HTTP request failed while fetching archetype beats for {ArchetypeId}", archetypeId);
+            throw new RepositoryException($"Failed to fetch archetype beats for {archetypeId}", ex);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Unexpected error occurred while fetching archetype beats");
+            _logger.LogError(ex, "Unexpected error occurred while fetching archetype beats for {ArchetypeId}", archetypeId);
             throw new RepositoryException($"An unexpected error occurred while fetching archetype beats for {archetypeId}", ex);
         }
     }
@@ -383,15 +367,129 @@ public class ArchetypesRepository : IArchetypesRepository
     {
         try
         {
-            var jsonContent = new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json");
-            var response = await _httpClient.PostAsync($"{_apiBaseUrl}/api/v1.0/ArchetypeBeats/SaveBeats", jsonContent);
+            _logger.LogInformation("Saving beats for archetype {ArchetypeId}", request.ArchetypeId);
 
-            return response.IsSuccessStatusCode;
+            ValidateSaveBeatsRequest(request);
+
+            var jsonContent = new StringContent(
+                JsonSerializer.Serialize(request, new JsonSerializerOptions
+                {
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                }),
+                Encoding.UTF8,
+                "application/json"
+            );
+
+            var response = await _httpClient.PostAsync(
+                $"{_apiBaseUrl}/api/v1.0/ArchetypeBeats/SaveBeats",
+                jsonContent
+            );
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                _logger.LogError("Failed to save beats. Status: {StatusCode}, Error: {Error}",
+                    response.StatusCode, errorContent);
+                return false;
+            }
+
+            return true;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Unexpected error occurred while saving the beat sheet");
-            throw new RepositoryException($"An unexpected error occurred while deleting archetype beats {request.ArchetypeId.ToString()}", ex);
+            _logger.LogError(ex, "Error occurred while saving beats for archetype {ArchetypeId}",
+                request.ArchetypeId);
+            throw new RepositoryException(
+                $"An unexpected error occurred while saving beats for archetype {request.ArchetypeId}",
+                ex
+            );
+        }
+    }
+    private void ValidateSaveBeatsRequest(SaveBeatsRequestDto request)
+    {
+        if (request == null)
+            throw new ArgumentNullException(nameof(request));
+
+        if (request.ArchetypeId == Guid.Empty)
+            throw new ArgumentException("ArchetypeId cannot be empty", nameof(request));
+
+        if (request.Beats == null)
+            throw new ArgumentException("Beats collection cannot be null", nameof(request));
+
+        foreach (var beat in request.Beats)
+        {
+            ValidateBeat(beat);
+        }
+
+        ValidateSequenceHierarchy(request.Beats);
+    }
+
+    private void ValidateBeat(ArchetypeBeatDto beat)
+    {
+        if (beat == null)
+            throw new ArgumentException("Beat cannot be null");
+
+
+        if (string.IsNullOrWhiteSpace(beat.Name))
+            throw new ArgumentException("Beat name cannot be empty");
+
+        if (beat.ParentSequence < 0)
+            throw new ArgumentException("ParentSequence cannot be negative");
+
+
+        if (beat.ChildSequence.HasValue && beat.ChildSequence.Value < 0)
+            throw new ArgumentException("ChildSequence cannot be negative");
+
+        if (beat.GrandchildSequence.HasValue && beat.GrandchildSequence.Value < 0)
+            throw new ArgumentException("GrandchildSequence cannot be negative");
+
+
+        if (beat.PercentOfStory < 0 || beat.PercentOfStory > 100)
+            throw new ArgumentException("PercentOfStory must be between 0 and 100");
+    }
+    private void ValidateSequenceHierarchy(List<ArchetypeBeatDto> beats)
+    {
+        // Only validate parent sequences for top-level beats (those without a ChildSequence)
+        var parentBeats = beats.Where(b => !b.ChildSequence.HasValue).ToList();
+        var parentSequences = parentBeats.Select(b => b.ParentSequence).ToList();
+
+        if (parentSequences.Distinct().Count() != parentSequences.Count)
+        {
+            throw new ArgumentException("Duplicate parent sequences found among top-level beats");
+        }
+
+        // Validate child sequences within each parent
+        foreach (var parentGroup in beats.Where(b => b.ChildSequence.HasValue)
+                                       .GroupBy(b => b.ParentSequence))
+        {
+            var childSequences = parentGroup
+                .Where(b => !b.GrandchildSequence.HasValue)
+                .Select(b => b.ChildSequence.Value)
+                .ToList();
+
+            if (childSequences.Distinct().Count() != childSequences.Count)
+            {
+                throw new ArgumentException(
+                    $"Duplicate child sequences found for parent {parentGroup.Key}"
+                );
+            }
+
+            // Validate grandchild sequences within each child
+            foreach (var childGroup in parentGroup.Where(b => b.GrandchildSequence.HasValue)
+                                                .GroupBy(b => b.ChildSequence.Value))
+            {
+                var grandchildSequences = childGroup
+                    .Select(b => b.GrandchildSequence.Value)
+                    .ToList();
+
+                if (grandchildSequences.Distinct().Count() != grandchildSequences.Count)
+                {
+                    throw new ArgumentException(
+                        $"Duplicate grandchild sequences found for parent {parentGroup.Key} " +
+                        $"and child {childGroup.Key}"
+                    );
+                }
+            }
         }
     }
 }

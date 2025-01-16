@@ -15,9 +15,6 @@ public class ArchetypesController : Controller
         _archetypesRepository = archetypesRepository ?? throw new ArgumentNullException(nameof(archetypesRepository));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
-
-
-
     public async Task<IActionResult> Archetypes()
     {
         try
@@ -328,10 +325,17 @@ public class ArchetypesController : Controller
                     Id = b.Id,
                     Name = b.Name,
                     Description = b.Description,
-                    Sequence = b.Sequence,
+                    Prompt = b.Prompt,
+                    ParentSequence = b.ParentSequence,
+                    ChildSequence = b.ChildSequence,
+                    GrandchildSequence = b.GrandchildSequence,
                     PercentOfStory = b.PercentOfStory,
                     ArchetypeId = id
-                }).OrderBy(b => b.Sequence).ToList()
+                })
+                .OrderBy(b => b.ParentSequence)
+                .ThenBy(b => b.ChildSequence)
+                .ThenBy(b => b.GrandchildSequence)
+                .ToList()
             };
 
             return View(model);
@@ -363,10 +367,16 @@ public class ArchetypesController : Controller
                     Id = Guid.TryParse(b.Id, out var id) ? id : Guid.Empty,
                     Name = b.Name,
                     Description = b.Description,
-                    Sequence = b.Sequence,
-                    PercentOfStory = b.PercentOfStory
+                    Prompt = b.Prompt,
+                    ParentSequence = b.ParentSequence,
+                    ChildSequence = b.ChildSequence,
+                    GrandchildSequence = b.GrandchildSequence,
+                    PercentOfStory = b.PercentOfStory,
+                    ArchetypeId = request.ArchetypeId
                 }).ToList()
             };
+
+            ValidateHierarchicalStructure(saveRequestDto.Beats);
 
             var success = await _archetypesRepository.SaveBeatsAsync(saveRequestDto);
 
@@ -375,11 +385,67 @@ public class ArchetypesController : Controller
 
             return Json(new { success = true });
         }
+        catch (ArgumentException ex)
+        {
+            _logger.LogWarning(ex, "Validation error while saving beats");
+            return Json(new { success = false, message = ex.Message });
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error saving beats");
             return Json(new { success = false, message = "An error occurred while saving beats." });
         }
     }
+    private void ValidateHierarchicalStructure(List<ArchetypeBeatDto> beats)
+    {
+        // Validate parent sequences are continuous
+        var parentSequences = beats.Select(b => b.ParentSequence).Distinct().OrderBy(x => x).ToList();
+        if (!IsSequenceContinuous(parentSequences))
+        {
+            throw new ArgumentException("Parent sequences must be continuous numbers starting from 1");
+        }
 
+        // Validate child sequences within each parent
+        foreach (var parentGroup in beats.GroupBy(b => b.ParentSequence))
+        {
+            var childSequences = parentGroup
+                .Where(b => b.ChildSequence.HasValue)
+                .Select(b => b.ChildSequence.Value)
+                .Distinct()
+                .OrderBy(x => x)
+                .ToList();
+
+            if (childSequences.Any() && !IsSequenceContinuous(childSequences))
+            {
+                throw new ArgumentException($"Child sequences for parent {parentGroup.Key} must be continuous numbers starting from 1");
+            }
+
+            // Validate grandchild sequences within each child
+            foreach (var childGroup in parentGroup.Where(b => b.ChildSequence.HasValue)
+                                                .GroupBy(b => b.ChildSequence.Value))
+            {
+                var grandchildSequences = childGroup
+                    .Where(b => b.GrandchildSequence.HasValue)
+                    .Select(b => b.GrandchildSequence.Value)
+                    .Distinct()
+                    .OrderBy(x => x)
+                    .ToList();
+
+                if (grandchildSequences.Any() && !IsSequenceContinuous(grandchildSequences))
+                {
+                    throw new ArgumentException(
+                        $"Grandchild sequences for parent {parentGroup.Key} and child {childGroup.Key} " +
+                        "must be continuous numbers starting from 1"
+                    );
+                }
+            }
+        }
+    }
+
+    private bool IsSequenceContinuous(List<int> sequence)
+    {
+        if (!sequence.Any()) return true;
+        return sequence.First() == 1 && sequence.Zip(sequence.Skip(1), (a, b) => b - a)
+                                              .All(diff => diff == 1);
+    }       
 }

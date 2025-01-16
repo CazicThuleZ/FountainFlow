@@ -18,18 +18,15 @@
     </div>
     <div class="col-lg-6">
         <div class="title-action d-flex justify-content-end align-items-center">
-            <!-- Icon -->
             <div class="text-center mb-3 me-4">
                 <img src="@Url.Content($"~/Images/{Model.Icon}")" alt="@Model.Domain" class="rounded-circle img-fluid"
                     style="max-width: 80px; max-height: 80px;">
             </div>
-            <!-- Domain / Architect -->
             <div class="me-3 d-flex align-items-center" style="font-size: 1.5em;">
                 <span style="margin-right: 8px;">@Model.Domain</span>
                 <span style="margin-right: 8px;">/</span>
                 <span>@Model.Architect</span>
             </div>
-            <!-- Save Changes Button -->
             <button class="btn btn-secondary" type="button" id="saveChangesBtn" disabled>
                 <i class="fa fa-save"></i> Save Changes
             </button>
@@ -38,32 +35,42 @@
 </div>
 
 <div class="wrapper wrapper-content animated fadeInRight">
-
     <div class="row">
-        <div class="row h-100">
-            <div class="col-lg-12">
-                <div class="ibox h-100">
-                    <div class="ibox-title d-flex justify-content-between align-items-center">
-                        <h5 id="beatDetailsTitle" class="mb-0">Beat Details</h5>
-                        <span id="sequenceBadge" class="badge bg-primary rounded-pill d-none">
-                            Sequence: <span id="beatSequence"></span>
-                        </span>
+        <div class="col-lg-12">
+            <div class="ibox h-100">
+                <div class="ibox-title d-flex justify-content-between align-items-center">
+                    <h5 id="beatDetailsTitle" class="mb-0">Beat Details</h5>
+                    <span id="sequenceBadge" class="badge bg-primary rounded-pill d-none">
+                        Sequence: <span id="beatSequence"></span>
+                    </span>
+                </div>
+                <div class="ibox-content">
+                    <div id="beatDetails" class="d-none">
+                        <!-- Description and Prompt in a row -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="font-bold">Description</label>
+                                    <textarea id="beatDescription" class="form-control" rows="3"></textarea>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="font-bold">Prompt</label>
+                                    <textarea id="beatPrompt" class="form-control" rows="3"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Percent of Story -->
+                        <div class="form-group mt-3">
+                            <label class="font-bold">Percent of Story</label>
+                            <input type="text" id="beatPercentKnob" value="50" class="dial">
+                            <input type="hidden" id="beatPercent" name="beatPercent" value="50">
+                        </div>
                     </div>
-                    <div class="ibox-content">
-                        <div id="beatDetails" class="d-none">
-                            <div class="form-group">
-                                <label class="font-bold">Description</label>
-                                <textarea id="beatDescription" class="form-control" rows="3"></textarea>
-                            </div>
-                            <div class="form-group mt-3">
-                                <label class="font-bold">Percent of Story</label>
-                                <input type="text" id="beatPercentKnob" value="50" class="dial">
-                                <input type="hidden" id="beatPercent" name="beatPercent" value="50">
-                            </div>
-                        </div>
-                        <div id="noBeatSelected" class="text-center text-muted py-5">
-                            Select a beat to view and edit details
-                        </div>
+                    <div id="noBeatSelected" class="text-center text-muted py-5">
+                        Select a beat to view and edit details
                     </div>
                 </div>
             </div>
@@ -89,19 +96,85 @@
                     <div class="beats-container">
                         <div class="dd" id="beats-list">
                             <ol class="dd-list">
-                                @foreach (var beat in Model.Beats.OrderBy(b => b.Sequence))
+                                @foreach (var parentBeat in Model.Beats
+                                .Where(b => !b.ChildSequence.HasValue)
+                                .OrderBy(b => b.ParentSequence))
                                 {
-                                    <li class="dd-item" data-id="@beat.Id">
+                                    <li class="dd-item" data-id="@parentBeat.Id">
                                         <div class="dd-handle">
                                             <i class="fas fa-grip-vertical"></i>
                                         </div>
                                         <div class="dd-content d-flex justify-content-between align-items-center">
-                                            <div class="beat-name">@beat.Name</div>
-                                            <button class="btn btn-danger btn-xs delete-beat" data-beat-id="@beat.Id"
-                                                onclick="event.stopPropagation();">
-                                                <i class="fas fa-trash-alt"></i>
-                                            </button>
+                                            <div class="beat-name">@parentBeat.Name</div>
+                                            <div class="d-flex align-items-center">
+                                                <span class="badge bg-secondary me-2">@parentBeat.PercentOfStory%</span>
+                                                <button class="btn btn-danger btn-xs delete-beat"
+                                                    data-beat-id="@parentBeat.Id" onclick="event.stopPropagation();">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                            </div>
                                         </div>
+                                        @if (Model.Beats.Any(b => b.ParentSequence == parentBeat.ParentSequence &&
+                                       b.ChildSequence.HasValue))
+                                        {
+                                            <ol class="dd-list">
+                                                @foreach (var childBeat in Model.Beats
+                                               .Where(b => b.ParentSequence == parentBeat.ParentSequence &&
+                                               b.ChildSequence.HasValue &&
+                                               !b.GrandchildSequence.HasValue)
+                                               .OrderBy(b => b.ChildSequence))
+                                                {
+                                                    <li class="dd-item" data-id="@childBeat.Id">
+                                                        <div class="dd-handle">
+                                                            <i class="fas fa-grip-vertical"></i>
+                                                        </div>
+                                                        <div class="dd-content d-flex justify-content-between align-items-center">
+                                                            <div class="beat-name">@childBeat.Name</div>
+                                                            <div class="d-flex align-items-center">
+                                                                <span
+                                                                    class="badge bg-secondary me-2">@childBeat.PercentOfStory%</span>
+                                                                <button class="btn btn-danger btn-xs delete-beat"
+                                                                    data-beat-id="@childBeat.Id" onclick="event.stopPropagation();">
+                                                                    <i class="fas fa-trash-alt"></i>
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                        @if (Model.Beats.Any(b => b.ParentSequence == parentBeat.ParentSequence &&
+                                                       b.ChildSequence == childBeat.ChildSequence &&
+                                                       b.GrandchildSequence.HasValue))
+                                                        {
+                                                            <ol class="dd-list">
+                                                                @foreach (var grandchildBeat in Model.Beats
+                                                               .Where(b => b.ParentSequence == parentBeat.ParentSequence &&
+                                                               b.ChildSequence == childBeat.ChildSequence &&
+                                                               b.GrandchildSequence.HasValue)
+                                                               .OrderBy(b => b.GrandchildSequence))
+                                                                {
+                                                                    <li class="dd-item" data-id="@grandchildBeat.Id">
+                                                                        <div class="dd-handle">
+                                                                            <i class="fas fa-grip-vertical"></i>
+                                                                        </div>
+                                                                        <div
+                                                                            class="dd-content d-flex justify-content-between align-items-center">
+                                                                            <div class="beat-name">@grandchildBeat.Name</div>
+                                                                            <div class="d-flex align-items-center">
+                                                                                <span
+                                                                                    class="badge bg-secondary me-2">@grandchildBeat.PercentOfStory%</span>
+                                                                                <button class="btn btn-danger btn-xs delete-beat"
+                                                                                    data-beat-id="@grandchildBeat.Id"
+                                                                                    onclick="event.stopPropagation();">
+                                                                                    <i class="fas fa-trash-alt"></i>
+                                                                                </button>
+                                                                            </div>
+                                                                        </div>
+                                                                    </li>
+                                                                }
+                                                            </ol>
+                                                        }
+                                                    </li>
+                                                }
+                                            </ol>
+                                        }
                                     </li>
                                 }
                             </ol>
@@ -122,12 +195,10 @@
     <script type="module">
         import '/js/beats-editor/index.js';
 
-        // Make archetypeId available globally
-        //window.archetypeId = '@Model.ArchetypeId';        
         window.archetypeId = '@(Model.ArchetypeId != Guid.Empty ? Model.ArchetypeId.ToString() : "null")';
 
         $(document).ready(function () {
-            // Initialize the beat editor
+
             BeatEditor.initialize(@Json.Serialize(Model.Beats));
 
             $('#addBeatBtn').click(function () {

@@ -29,7 +29,12 @@ namespace FountainFlow.Api.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ArchetypeBeatReadDto>>> GetArchetypeBeats()
         {
-            var archetypeBeats = await _ffDbContext.ArchetypeBeats.ToListAsync();
+            var archetypeBeats = await _ffDbContext.ArchetypeBeats
+                .OrderBy(ab => ab.ParentSequence)
+                .ThenBy(ab => ab.ChildSequence)
+                .ThenBy(ab => ab.GrandchildSequence)
+                .ToListAsync();
+
             return Ok(_mapper.Map<IEnumerable<ArchetypeBeatReadDto>>(archetypeBeats));
         }
 
@@ -53,7 +58,9 @@ namespace FountainFlow.Api.Controllers
         {
             var archetypeBeats = await _ffDbContext.ArchetypeBeats
                 .Where(ab => ab.ArchetypeId == id)
-                .OrderBy(ab => ab.Sequence)
+                .OrderBy(ab => ab.ParentSequence)
+                .ThenBy(ab => ab.ChildSequence)
+                .ThenBy(ab => ab.GrandchildSequence)
                 .ToListAsync();
 
             if (!archetypeBeats.Any())
@@ -71,6 +78,10 @@ namespace FountainFlow.Api.Controllers
             archetypeBeat.Id = Guid.NewGuid();
             archetypeBeat.CreatedUTC = DateTime.UtcNow;
             archetypeBeat.UpdatedUTC = DateTime.UtcNow;
+
+            archetypeBeat.ChildSequence ??= 0;
+            archetypeBeat.GrandchildSequence ??= 0;
+
             _ffDbContext.ArchetypeBeats.Add(archetypeBeat);
             await _ffDbContext.SaveChangesAsync();
 
@@ -95,6 +106,9 @@ namespace FountainFlow.Api.Controllers
 
             _mapper.Map(archetypeBeatDto, archetypeBeat);
             archetypeBeat.UpdatedUTC = DateTime.UtcNow;
+
+            archetypeBeat.ChildSequence ??= 0;
+            archetypeBeat.GrandchildSequence ??= 0;
 
             try
             {
@@ -159,14 +173,16 @@ namespace FountainFlow.Api.Controllers
                         ArchetypeId = request.ArchetypeId,
                         Name = rb.Name,
                         Description = rb.Description,
-                        Sequence = rb.Sequence,
+                        Prompt = rb.Prompt,
+                        ParentSequence = rb.ParentSequence,
+                        ChildSequence = rb.ChildSequence ?? 0,
+                        GrandchildSequence = rb.GrandchildSequence ?? 0,
                         PercentOfStory = rb.PercentOfStory,
                         CreatedUTC = DateTime.UtcNow,
                         UpdatedUTC = DateTime.UtcNow
                     })
                     .ToList();
 
-                // Perform delete, update, and add operations
                 if (beatsToDelete.Any())
                 {
                     _ffDbContext.ArchetypeBeats.RemoveRange(beatsToDelete);
@@ -177,7 +193,10 @@ namespace FountainFlow.Api.Controllers
                     var updatedBeat = request.Beats.First(rb => rb.Id == existingBeat.Id);
                     existingBeat.Name = updatedBeat.Name;
                     existingBeat.Description = updatedBeat.Description;
-                    existingBeat.Sequence = updatedBeat.Sequence;
+                    existingBeat.Prompt = updatedBeat.Prompt;
+                    existingBeat.ParentSequence = updatedBeat.ParentSequence;
+                    existingBeat.ChildSequence = updatedBeat.ChildSequence ?? 0;
+                    existingBeat.GrandchildSequence = updatedBeat.GrandchildSequence ?? 0;
                     existingBeat.PercentOfStory = updatedBeat.PercentOfStory;
                     existingBeat.UpdatedUTC = DateTime.UtcNow;
                 }
@@ -187,17 +206,15 @@ namespace FountainFlow.Api.Controllers
                     _ffDbContext.ArchetypeBeats.AddRange(beatsToAdd);
                 }
 
-                // Save changes to the database
                 await _ffDbContext.SaveChangesAsync();
 
                 return Ok(new { success = true });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, "An error occurred while saving beats:  " + ex.Message);
+                return StatusCode(500, "An error occurred while saving beats: " + ex.Message);
             }
         }
-
 
         private bool ArchetypeBeatExists(Guid id)
         {
