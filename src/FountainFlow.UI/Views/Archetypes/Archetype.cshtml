@@ -2,6 +2,8 @@
     ViewBag.Title = "Story Elements";
     ViewBag.SubTitle = "Archetypes";
 }
+
+@model List<FountainFlowUI.Models.ArchetypeViewModel>
 @section styles
 {
     <!-- Datatable css -->
@@ -49,130 +51,7 @@
                         </thead>
 
                         <tbody>
-
-                            <tr>
-                                <td>
-                                    <div class="form-check">
-                                        <input type="checkbox" class="form-check-input" id="customCheck3">
-                                        <label class="form-check-label" for="customCheck3">&nbsp;</label>
-                                    </div>
-                                </td>
-                                <td>
-                                    <p class="m-0 d-inline-block align-middle font-16">
-                                        <a href=@Url.Action("ExternalLink", "ECommerce") class="text-body">Save The
-                                            Cat</a>
-                                        <br />
-                                    </p>
-                                </td>
-                                <td>
-                                    Blake Snyder
-                                </td>
-
-                                <td>
-                                    1
-                                </td>
-
-                                <td class="table-action">
-                                    <a href="javascript:void(0);" class="action-icon"> <i class="mdi mdi-eye"></i></a>
-                                    <a href="javascript:void(0);" class="action-icon"> <i
-                                            class="mdi mdi-square-edit-outline"></i></a>
-                                    <a href="javascript:void(0);" class="action-icon"> <i
-                                            class="mdi mdi-delete"></i></a>
-                                </td>
-                            </tr>
-
-                            <tr>
-                                <td>
-                                    <div class="form-check">
-                                        <input type="checkbox" class="form-check-input" id="customCheck2">
-                                        <label class="form-check-label" for="customCheck2">&nbsp;</label>
-                                    </div>
-                                </td>
-                                <td>
-                                    <p class="m-0 d-inline-block align-middle font-16">
-                                        <a href=@Url.Action("ExternalLink", "ECommerce") class="text-body">Classic</a>
-                                        <br />
-                                    </p>
-                                </td>
-                                <td>
-                                    Aristotle
-                                </td>
-
-                                <td>
-                                    2
-                                </td>
-
-                                <td class="table-action">
-                                    <a href="javascript:void(0);" class="action-icon"> <i class="mdi mdi-eye"></i></a>
-                                    <a href="javascript:void(0);" class="action-icon"> <i
-                                            class="mdi mdi-square-edit-outline"></i></a>
-                                    <a href="javascript:void(0);" class="action-icon"> <i
-                                            class="mdi mdi-delete"></i></a>
-                                </td>
-                            </tr>
-
-                            <tr>
-                                <td>
-                                    <div class="form-check">
-                                        <input type="checkbox" class="form-check-input" id="customCheck4">
-                                        <label class="form-check-label" for="customCheck4">&nbsp;</label>
-                                    </div>
-                                </td>
-                                <td>
-                                    <p class="m-0 d-inline-block align-middle font-16">
-                                        <a href=@Url.Action("ExternalLink", "ECommerce") class="text-body">Story
-                                            Circle</a>
-                                        <br />
-                                    </p>
-                                </td>
-                                <td>
-                                    Dan Harmon
-                                </td>
-
-                                <td>
-                                    3
-                                </td>
-
-                                <td class="table-action">
-                                    <a href="javascript:void(0);" class="action-icon"> <i class="mdi mdi-eye"></i></a>
-                                    <a href="javascript:void(0);" class="action-icon"> <i
-                                            class="mdi mdi-square-edit-outline"></i></a>
-                                    <a href="javascript:void(0);" class="action-icon"> <i
-                                            class="mdi mdi-delete"></i></a>
-                                </td>
-                            </tr>
-
-                            <tr>
-                                <td>
-                                    <div class="form-check">
-                                        <input type="checkbox" class="form-check-input" id="customCheck5">
-                                        <label class="form-check-label" for="customCheck5">&nbsp;</label>
-                                    </div>
-                                </td>
-                                <td>
-                                    <p class="m-0 d-inline-block align-middle font-16">
-                                        <a href=@Url.Action("ExternalLink", "ECommerce") class="text-body">Hero
-                                            Journey</s></a>
-                                        <br />
-                                    </p>
-                                </td>
-                                <td>
-                                    Joseph Campbell
-                                </td>
-
-                                <td>
-                                    4
-                                </td>
-
-                                <td class="table-action">
-                                    <a href="javascript:void(0);" class="action-icon"> <i class="mdi mdi-eye"></i></a>
-                                    <a href="javascript:void(0);" class="action-icon"> <i
-                                            class="mdi mdi-square-edit-outline"></i></a>
-                                    <a href="javascript:void(0);" class="action-icon"> <i
-                                            class="mdi mdi-delete"></i></a>
-                                </td>
-                            </tr>
-
+                            <!-- Archetypes will be loaded dynamically via JavaScript -->
                         </tbody>
                     </table>
                 </div>
@@ -202,41 +81,29 @@
                         </ul>
                         <div class="tab-content">
                             <div class="tab-pane show active" id="beat1">
-                                <div class="card">
+                                <!-- Beats content will be loaded dynamically via JavaScript -->
+                                <div id="beats-content" class="card">
                                     <div class="card-body">
                                         <div class="row">
                                             <div class="col-lg-5">
                                                 <a href="javascript: void(0);" class="text-center d-block mb-4">
-                                                    <img src="~/images/SaveTheCat.png" class="img-fluid"
+                                                    <img id="archetype-image" src="" class="img-fluid"
                                                         style="max-width: 280px;" alt="Story-img" />
                                                 </a>
-
                                             </div> <!-- end col -->
                                             <div class="col-lg-7">
                                                 <form class="ps-lg-4">
-
-                                                    <h3 class="mt-0">Save The Cat </h3>
-                                                    <p class="mb-1">Added Date: 09/12/2018</p>
-
+                                                    <h3 id="archetype-title" class="mt-0"></h3>
+                                                    <p id="archetype-date" class="mb-1"></p>
                                                     <div class="mt-4">
-                                                        <p>
-                                                            The title, Save the Cat, is a screenwriting term coined by
-                                                            Blake Snyder and refers to a particular plot device. The
-                                                            save the cat method involves having the protagonist do
-                                                            something admirable toward the start of the story in order
-                                                            to establish them as a likable person and get the audience
-                                                            on their side. Having the protagonist save a cat can be
-                                                            literal or figurative.
-                                                        </p>
+                                                        <p id="archetype-description"></p>
                                                     </div>
-
                                                 </form>
                                             </div> <!-- end col -->
 
                                             <div class="col-xl-12">
                                                 <div class="card">
-                                                    <div
-                                                        class="card-header d-flex justify-content-between align-items-center">
+                                                    <div class="card-header d-flex justify-content-between align-items-center">
                                                         <h4 class="header-title">Story Elements</h4>
                                                         <div class="dropdown">
                                                             <a href="#" class="dropdown-toggle arrow-none card-drop"
@@ -245,93 +112,16 @@
                                                             </a>
                                                             <div class="dropdown-menu dropdown-menu-end">
                                                                 <!-- item-->
-                                                                <a href="javascript:void(0);"
-                                                                    class="dropdown-item">Edit</a>
+                                                                <a href="javascript:void(0);" class="dropdown-item">Edit</a>
                                                                 <!-- item-->
-                                                                <a href="javascript:void(0);"
-                                                                    class="dropdown-item">Examples</a>
+                                                                <a href="javascript:void(0);" class="dropdown-item">Examples</a>
                                                             </div>
                                                         </div>
                                                     </div>
 
-                                                    <div class="card-body py-0 mb-3" data-simplebar
-                                                        style="max-height: 315px;">
-                                                        <div class="timeline-alt py-0">
-                                                            <div class="timeline-item">
-                                                                <i
-                                                                    class="mdi mdi-upload bg-info-lighten text-info timeline-icon"></i>
-                                                                <div class="timeline-item-info">
-                                                                    <a href="#"
-                                                                        class="text-info fw-bold mb-1 d-block">Opening
-                                                                        Image</a>
-                                                                    <small>A snapshot that sets the tone and shows the
-                                                                        hero’s starting point (often the first visual or
-                                                                        scene)</small>
-                                                                    <p class="mb-0 pb-2">
-                                                                        <small class="text-muted">Page 1</small>
-                                                                    </p>
-                                                                </div>
-                                                            </div>
-
-                                                            <div class="timeline-item">
-                                                                <i
-                                                                    class="mdi mdi-upload bg-info-lighten text-info timeline-icon"></i>
-                                                                <div class="timeline-item-info">
-                                                                    <a href="#"
-                                                                        class="text-info fw-bold mb-1 d-block">Theme
-                                                                        Stated</a>
-                                                                    <small>A hint at the story’s central theme or
-                                                                        lesson, usually delivered through dialogue
-                                                                        around the beginning</small>
-                                                                    <p class="mb-0 pb-2">
-                                                                        <small class="text-muted">Page 2</small>
-                                                                    </p>
-                                                                </div>
-                                                            </div>
-
-                                                            <div class="timeline-item">
-                                                                <i
-                                                                    class="mdi mdi-upload bg-info-lighten text-info timeline-icon"></i>
-                                                                <div class="timeline-item-info">
-                                                                    <a href="#"
-                                                                        class="text-info fw-bold mb-1 d-block">Set-Up</a>
-                                                                    <small>Introduction of the hero’s ordinary world,
-                                                                        characters, and status quo in the first
-                                                                        pages</small>
-                                                                    <p class="mb-0 pb-2">
-                                                                        <small class="text-muted">Page 3</small>
-                                                                    </p>
-                                                                </div>
-                                                            </div>
-
-                                                            <div class="timeline-item">
-                                                                <i
-                                                                    class="mdi mdi-upload bg-info-lighten text-info timeline-icon"></i>
-                                                                <div class="timeline-item-info">
-                                                                    <a href="#"
-                                                                        class="text-info fw-bold mb-1 d-block">Catalyst</a>
-                                                                    <small>An inciting incident that disrupts the status
-                                                                        quo and kicks the story into motion</small>
-                                                                    <p class="mb-0 pb-2">
-                                                                        <small class="text-muted">Page 4</small>
-                                                                    </p>
-                                                                </div>
-                                                            </div>
-
-                                                            <div class="timeline-item">
-                                                                <i
-                                                                    class="mdi mdi-upload bg-info-lighten text-info timeline-icon"></i>
-                                                                <div class="timeline-item-info">
-                                                                    <a href="#"
-                                                                        class="text-info fw-bold mb-1 d-block">Debate</a>
-                                                                    <small>A period where the hero hesitates or debates
-                                                                        what to do next, often expressing doubt or
-                                                                        reluctance</small>
-                                                                    <p class="mb-0 pb-2">
-                                                                        <small class="text-muted">Page 5</small>
-                                                                    </p>
-                                                                </div>
-                                                            </div>
+                                                    <div class="card-body py-0 mb-3" data-simplebar style="max-height: 315px;">
+                                                        <div id="beats-timeline" class="timeline-alt py-0">
+                                                            <!-- Beats will be loaded dynamically -->
                                                         </div>
                                                         <!-- end timeline -->
                                                     </div> <!-- end simplebar -->
@@ -343,118 +133,8 @@
                                 </div> <!-- end card-->
                             </div>
                             <div class="tab-pane" id="genre1">
-                                <div class="col-md-6 col-xxl-12">
-                                    <div class="card d-block">
-                                        <div class="card-body">
-                                            <div class="dropdown card-widgets">
-                                                <a href="#" class="dropdown-toggle arrow-none" data-bs-toggle="dropdown"
-                                                    aria-expanded="false">
-                                                    <i class="ri-more-fill"></i>
-                                                </a>
-                                                <div class="dropdown-menu dropdown-menu-end">
-                                                    <!-- item-->
-                                                    <a href="javascript:void(0);" class="dropdown-item"><i
-                                                            class="mdi mdi-pencil me-1"></i>Edit</a>
-                                                    <!-- item-->
-                                                    <a href="javascript:void(0);" class="dropdown-item"><i
-                                                            class="mdi mdi-delete me-1"></i>Delete</a>
-                                                    <!-- item-->
-                                                    <a href="javascript:void(0);" class="dropdown-item"><i
-                                                            class="mdi mdi-email-outline me-1"></i>Invite</a>
-                                                    <!-- item-->
-                                                    <a href="javascript:void(0);" class="dropdown-item"><i
-                                                            class="mdi mdi-exit-to-app me-1"></i>Leave</a>
-                                                </div>
-                                            </div>
-                                            <!-- project title-->
-                                            <h4 class="mt-0">
-                                                <a href=@Url.Action("GenreDetails", "Apps") class="text-title">Golden
-                                                    Fleece</a>
-                                            </h4>
-
-                                            <p class="text-muted font-13 my-3">ts name pays homage to the Greek myth of
-                                                Jason and the Argonauts. GF is usually a “road trip” (O Brother, Where
-                                                Art Thou; Planes, Trains & Automobiles); however, sometimes the journey
-                                                can be more of a spiritual one (Chariots of Fire, Bad News Bears). GF
-                                                contains a “road” which can span oceans, time, or even down the street
-                                                as long as growth occurs. It contains a “team” or a “buddy” which our
-                                                hero needs to guide him or her along the way, and a “prize” which is
-                                                sought and which is primal: a return to home, a treasure, regaining
-                                                one’s birthright.<a href="javascript:void(0);"
-                                                    class="fw-bold text-muted">view more</a>
-                                            </p>
-
-                                            <!-- project detail-->
-                                            <p class="mb-1">
-                                                <span class="pe-2 text-nowrap mb-2 d-inline-block">
-                                                    <i class="mdi mdi-format-list-bulleted-type text-muted"></i>
-                                                    <b>11</b> Examples
-                                                </span>
-                                                <span class="text-nowrap mb-2 d-inline-block">
-                                                    <i class="mdi mdi-comment-multiple-outline text-muted"></i>
-                                                    <b>55</b> Hybrids
-                                                </span>
-                                            </p>
-                                        </div> <!-- end card-body-->
-
-                                    </div> <!-- end card-->
-
-                                    <div class="card d-block">
-                                        <div class="card-body">
-                                            <div class="dropdown card-widgets">
-                                                <a href="#" class="dropdown-toggle arrow-none" data-bs-toggle="dropdown"
-                                                    aria-expanded="false">
-                                                    <i class="ri-more-fill"></i>
-                                                </a>
-                                                <div class="dropdown-menu dropdown-menu-end">
-                                                    <!-- item-->
-                                                    <a href="javascript:void(0);" class="dropdown-item"><i
-                                                            class="mdi mdi-pencil me-1"></i>Edit</a>
-                                                    <!-- item-->
-                                                    <a href="javascript:void(0);" class="dropdown-item"><i
-                                                            class="mdi mdi-delete me-1"></i>Delete</a>
-                                                    <!-- item-->
-                                                    <a href="javascript:void(0);" class="dropdown-item"><i
-                                                            class="mdi mdi-email-outline me-1"></i>Invite</a>
-                                                    <!-- item-->
-                                                    <a href="javascript:void(0);" class="dropdown-item"><i
-                                                            class="mdi mdi-exit-to-app me-1"></i>Leave</a>
-                                                </div>
-                                            </div>
-                                            <!-- project title-->
-                                            <h4 class="mt-0">
-                                                <a href=@Url.Action("GenreDetails", "Apps") class="text-title">Monster
-                                                    In The House</a>
-                                            </h4>
-
-                                            <p class="text-muted font-13 my-3">Considered one of the oldest and the most
-                                                primal type of story, MITH contains a “monster” who is supernatural in
-                                                powers (this power can be insanity, not necessarily magical) and is evil
-                                                at its core; a “house” – an enclosed space containing a family unit, a
-                                                town, or a world; and a “sin” – someone who is guilty of bringing the
-                                                monster into the house. The sin can be an actual sin (the sin of
-                                                infidelity in Fatal Attraction), hubris (Jurrasic Park), or even
-                                                ignorance (Alien). MITH tales also often include “The Half Man”: a
-                                                character who has encountered the monster before, or has prior knowledge
-                                                of it, and has come away damaged (Quint in Jaws).<a
-                                                    href="javascript:void(0);" class="fw-bold text-muted">view more</a>
-                                            </p>
-
-                                            <!-- project detail-->
-                                            <p class="mb-1">
-                                                <span class="pe-2 text-nowrap mb-2 d-inline-block">
-                                                    <i class="mdi mdi-format-list-bulleted-type text-muted"></i>
-                                                    <b>21</b> Examples
-                                                </span>
-                                                <span class="text-nowrap mb-2 d-inline-block">
-                                                    <i class="mdi mdi-comment-multiple-outline text-muted"></i>
-                                                    <b>71</b> Hybrids
-                                                </span>
-                                            </p>
-                                        </div> <!-- end card-body-->
-
-                                    </div> <!-- end card-->
-
+                                <div id="genres-content" class="col-md-6 col-xxl-12">
+                                    <!-- Genres will be loaded dynamically -->
                                 </div> <!-- end col -->
                             </div>
                         </div>
@@ -476,4 +156,207 @@
     <script src="~/vendor/datatables.net-responsive/js/dataTables.responsive.min.js"></script>
     <script src="~/vendor/datatables.net-responsive-bs5/js/responsive.bootstrap5.min.js"></script>
     <script src="~/vendor/jquery-datatables-checkboxes/js/dataTables.checkboxes.min.js"></script>
+    
+    <script>
+        $(document).ready(function () {
+            // Initialize variables
+            let archetypes = [];
+            let selectedArchetypeId = null;
+            
+            // Load archetypes on page load
+            loadArchetypes();
+            
+            function loadArchetypes() {
+                $.ajax({
+                    url: '@Url.Action("GetArchetypes", "Archetypes")',
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function (data) {
+                        archetypes = data;
+                        
+                        // Sort archetypes by rank (using the ID as a proxy for rank in this example)
+                        archetypes.sort((a, b) => a.id.localeCompare(b.id));
+                        
+                        // Populate the archetypes table
+                        populateArchetypesTable(archetypes);
+                        
+                        // Select the first archetype by default
+                        if (archetypes.length > 0) {
+                            selectArchetype(archetypes[0].id);
+                        }
+                    },
+                    error: function (error) {
+                        console.error('Error loading archetypes:', error);
+                    }
+                });
+            }
+            
+            function populateArchetypesTable(archetypes) {
+                const tableBody = $('#archetypes-datatable tbody');
+                tableBody.empty();
+                
+                archetypes.forEach((archetype, index) => {
+                    const row = `
+                        <tr data-archetype-id="${archetype.id}">
+                            <td>
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" id="customCheck${index}">
+                                    <label class="form-check-label" for="customCheck${index}">&nbsp;</label>
+                                </div>
+                            </td>
+                            <td>
+                                <p class="m-0 d-inline-block align-middle font-16">
+                                    <a href="javascript:void(0);" class="text-body archetype-link">${archetype.domain}</a>
+                                    <br />
+                                </p>
+                            </td>
+                            <td>
+                                ${archetype.architect}
+                            </td>
+                            <td>
+                                ${index + 1}
+                            </td>
+                            <td class="table-action">
+                                <a href="javascript:void(0);" class="action-icon view-archetype"> <i class="mdi mdi-eye"></i></a>
+                                <a href="javascript:void(0);" class="action-icon"> <i class="mdi mdi-square-edit-outline"></i></a>
+                                <a href="javascript:void(0);" class="action-icon"> <i class="mdi mdi-delete"></i></a>
+                            </td>
+                        </tr>
+                    `;
+                    tableBody.append(row);
+                });
+                
+                // Add click event to archetype links
+                $('.archetype-link, .view-archetype').on('click', function() {
+                    const archetypeId = $(this).closest('tr').data('archetype-id');
+                    selectArchetype(archetypeId);
+                });
+                
+                // Initialize DataTable
+                if ($.fn.DataTable.isDataTable('#archetypes-datatable')) {
+                    $('#archetypes-datatable').DataTable().destroy();
+                }
+                
+                $('#archetypes-datatable').DataTable({
+                    responsive: true,
+                    "order": [[3, "asc"]], // Sort by rank column
+                    "columnDefs": [
+                        { "orderable": false, "targets": [0, 4] } // Disable ordering for checkbox and actions columns
+                    ]
+                });
+            }
+            
+            function selectArchetype(archetypeId) {
+                selectedArchetypeId = archetypeId;
+                
+                // Highlight the selected row
+                $('#archetypes-datatable tbody tr').removeClass('table-active');
+                $(`#archetypes-datatable tbody tr[data-archetype-id="${archetypeId}"]`).addClass('table-active');
+                
+                // Load archetype details
+                $.ajax({
+                    url: `@Url.Action("GetArchetype", "Archetypes")?id=${archetypeId}`,
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function (data) {
+                        // Update the archetype details
+                        updateArchetypeDetails(data);
+                        
+                        // Update the beats
+                        updateBeats(data.beats);
+                        
+                        // Update the genres
+                        updateGenres(data.genres);
+                    },
+                    error: function (error) {
+                        console.error('Error loading archetype details:', error);
+                    }
+                });
+            }
+            
+            function updateArchetypeDetails(archetype) {
+                // Update the archetype image
+                const imagePath = archetype.icon ? archetype.icon : '/images/default-archetype.png';
+                $('#archetype-image').attr('src', imagePath);
+                
+                // Update the archetype title and description
+                $('#archetype-title').text(archetype.domain);
+                $('#archetype-date').text(`Added Date: ${new Date().toLocaleDateString()}`);
+                $('#archetype-description').text(archetype.description);
+            }
+            
+            function updateBeats(beats) {
+                const beatsTimeline = $('#beats-timeline');
+                beatsTimeline.empty();
+                
+                if (beats && beats.length > 0) {
+                    beats.sort((a, b) => a.parentSequence - b.parentSequence);
+                    
+                    beats.forEach(beat => {
+                        const beatItem = `
+                            <div class="timeline-item">
+                                <i class="mdi mdi-upload bg-info-lighten text-info timeline-icon"></i>
+                                <div class="timeline-item-info">
+                                    <a href="#" class="text-info fw-bold mb-1 d-block">${beat.name}</a>
+                                    <small>${beat.description}</small>
+                                    <p class="mb-0 pb-2">
+                                        <small class="text-muted">Page ${beat.percentOfStory}</small>
+                                    </p>
+                                </div>
+                            </div>
+                        `;
+                        beatsTimeline.append(beatItem);
+                    });
+                } else {
+                    beatsTimeline.append('<div class="text-center p-3">No beats available for this archetype.</div>');
+                }
+            }
+            
+            function updateGenres(genres) {
+                const genresContent = $('#genres-content');
+                genresContent.empty();
+                
+                if (genres && genres.length > 0) {
+                    genres.forEach(genre => {
+                        const genreCard = `
+                            <div class="card d-block mb-3">
+                                <div class="card-body">
+                                    <div class="dropdown card-widgets">
+                                        <a href="#" class="dropdown-toggle arrow-none" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="ri-more-fill"></i>
+                                        </a>
+                                        <div class="dropdown-menu dropdown-menu-end">
+                                            <a href="javascript:void(0);" class="dropdown-item"><i class="mdi mdi-pencil me-1"></i>Edit</a>
+                                            <a href="javascript:void(0);" class="dropdown-item"><i class="mdi mdi-delete me-1"></i>Delete</a>
+                                            <a href="javascript:void(0);" class="dropdown-item"><i class="mdi mdi-email-outline me-1"></i>Invite</a>
+                                            <a href="javascript:void(0);" class="dropdown-item"><i class="mdi mdi-exit-to-app me-1"></i>Leave</a>
+                                        </div>
+                                    </div>
+                                    <!-- project title-->
+                                    <h4 class="mt-0">
+                                        <a href="javascript:void(0);" class="text-title">${genre.name}</a>
+                                    </h4>
+                                    <p class="text-muted font-13 my-3">${genre.description}<a href="javascript:void(0);" class="fw-bold text-muted">view more</a></p>
+                                    <!-- project detail-->
+                                    <p class="mb-1">
+                                        <span class="pe-2 text-nowrap mb-2 d-inline-block">
+                                            <i class="mdi mdi-format-list-bulleted-type text-muted"></i>
+                                            <b>10</b> Examples
+                                        </span>
+                                        <span class="text-nowrap mb-2 d-inline-block">
+                                            <i class="mdi mdi-comment-multiple-outline text-muted"></i>
+                                            <b>50</b> Hybrids
+                                        </span>
+                                    </p>
+                                </div>
+                            </div>
+                        `;
+                        genresContent.append(genreCard);
+                    });
+                } else {
+                    genresContent.append('<div class="text-center p-3">No genres available for this archetype.</div>');
+                }
+            }
+        });
+    </script>
 }
