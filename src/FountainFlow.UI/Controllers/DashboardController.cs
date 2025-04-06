@@ -5,8 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-
-namespace FountainFlow.UI.Controllers
+namespace FountainFlowUI.Controllers
 {
     public class DashboardController : Controller
     {

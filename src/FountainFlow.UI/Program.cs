@@ -1,7 +1,16 @@
+using FountainFlowUI.Interfaces;
+using FountainFlowUI.Repository;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+// Register HttpClient
+builder.Services.AddHttpClient();
+
+// Register repositories
+builder.Services.AddScoped<IArchetypesRepository, ArchetypesRepository>();
 
 var app = builder.Build();
 

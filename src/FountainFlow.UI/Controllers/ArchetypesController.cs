@@ -3,13 +3,296 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using FountainFlowUI.DTOs;
+using FountainFlowUI.Interfaces;
+using FountainFlowUI.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
-namespace FountainFlow.UI.Controllers
+namespace FountainFlowUI.Controllers
 {
     public class ArchetypesController : Controller
     {
+        private readonly ILogger<ArchetypesController> _logger;
+        private readonly IArchetypesRepository _archetypesRepository;
+
+        public ArchetypesController(ILogger<ArchetypesController> logger, IArchetypesRepository archetypesRepository)
+        {
+            _logger = logger;
+            _archetypesRepository = archetypesRepository;
+        }
+
         public IActionResult Archetype() => View();
+
+        [HttpGet]
+        public async Task<IActionResult> GetArchetypes()
+        {
+            try
+            {
+                var archetypeDtos = await _archetypesRepository.GetArchetypesAsync();
+                var archetypeViewModels = archetypeDtos.Select(MapToViewModel).ToList();
+                
+                return Json(archetypeViewModels);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving archetypes");
+                return StatusCode(500, "An error occurred while retrieving archetypes");
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetArchetype(Guid id)
+        {
+            try
+            {
+                var archetypeDto = await _archetypesRepository.GetArchetypeByIdAsync(id);
+                if (archetypeDto == null || archetypeDto.Id == Guid.Empty)
+                {
+                    return NotFound($"Archetype with ID {id} not found");
+                }
+
+                var archetypeViewModel = MapToViewModel(archetypeDto);
+                
+                // Get beats for this archetype
+                var beats = await _archetypesRepository.GetArchetypeBeatsByArchetypeIdIdAsync(id);
+                archetypeViewModel.Beats = beats.Select(MapToBeatViewModel).ToList();
+                
+                // Get genres for this archetype
+                var genres = await _archetypesRepository.GetArchetypeGenresByArchetypeIdIdAsync(id);
+                archetypeViewModel.Genres = genres.Select(MapToGenreViewModel).ToList();
+                
+                return Json(archetypeViewModel);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving archetype with ID {ArchetypeId}", id);
+                return StatusCode(500, $"An error occurred while retrieving archetype with ID {id}");
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetArchetypeBeats(Guid archetypeId)
+        {
+            try
+            {
+                var beatDtos = await _archetypesRepository.GetArchetypeBeatsByArchetypeIdIdAsync(archetypeId);
+                var beatViewModels = beatDtos.Select(MapToBeatViewModel).ToList();
+                
+                return Json(beatViewModels);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving beats for archetype with ID {ArchetypeId}", archetypeId);
+                return StatusCode(500, $"An error occurred while retrieving beats for archetype with ID {archetypeId}");
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetArchetypeGenres(Guid archetypeId)
+        {
+            try
+            {
+                var genreDtos = await _archetypesRepository.GetArchetypeGenresByArchetypeIdIdAsync(archetypeId);
+                var genreViewModels = genreDtos.Select(MapToGenreViewModel).ToList();
+                
+                return Json(genreViewModels);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving genres for archetype with ID {ArchetypeId}", archetypeId);
+                return StatusCode(500, $"An error occurred while retrieving genres for archetype with ID {archetypeId}");
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CreateArchetype([FromBody] ArchetypeViewModel viewModel)
+        {
+            try
+            {
+                var archetypeDto = MapToDto(viewModel);
+                var createdArchetype = await _archetypesRepository.CreateArchetypeAsync(archetypeDto);
+                
+                return CreatedAtAction(nameof(GetArchetype), new { id = createdArchetype.Id }, MapToViewModel(createdArchetype));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating archetype");
+                return StatusCode(500, "An error occurred while creating the archetype");
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CreateArchetypeGenre([FromBody] GenreViewModel viewModel)
+        {
+            try
+            {
+                var genreDto = MapToDto(viewModel);
+                var createdGenre = await _archetypesRepository.CreateArchetypeGenreAsync(genreDto);
+                
+                return CreatedAtAction(nameof(GetArchetypeGenres), new { archetypeId = createdGenre.ArchetypeId }, MapToGenreViewModel(createdGenre));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating archetype genre");
+                return StatusCode(500, "An error occurred while creating the archetype genre");
+            }
+        }
+
+        [HttpDelete]
+        public async Task<IActionResult> DeleteArchetype(Guid id)
+        {
+            try
+            {
+                var result = await _archetypesRepository.DeleteArchetypeAsync(id);
+                if (!result)
+                {
+                    return NotFound($"Archetype with ID {id} not found");
+                }
+                
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting archetype with ID {ArchetypeId}", id);
+                return StatusCode(500, $"An error occurred while deleting archetype with ID {id}");
+            }
+        }
+
+        [HttpDelete]
+        public async Task<IActionResult> DeleteArchetypeGenre(Guid id)
+        {
+            try
+            {
+                var result = await _archetypesRepository.DeleteArchetypeGenreAsync(id);
+                if (!result)
+                {
+                    return NotFound($"Archetype genre with ID {id} not found");
+                }
+                
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting archetype genre with ID {GenreId}", id);
+                return StatusCode(500, $"An error occurred while deleting archetype genre with ID {id}");
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> SaveBeats([FromBody] EditBeatsViewModel viewModel)
+        {
+            try
+            {
+                var saveBeatsRequest = new SaveBeatsRequestDto
+                {
+                    ArchetypeId = viewModel.ArchetypeId,
+                    Beats = viewModel.Beats.Select(MapToBeatDto).ToList()
+                };
+                
+                var result = await _archetypesRepository.SaveBeatsAsync(saveBeatsRequest);
+                if (!result)
+                {
+                    return BadRequest("Failed to save beats");
+                }
+                
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error saving beats for archetype with ID {ArchetypeId}", viewModel.ArchetypeId);
+                return StatusCode(500, $"An error occurred while saving beats for archetype with ID {viewModel.ArchetypeId}");
+            }
+        }
+
+        #region Mapping Methods
+        
+        private ArchetypeViewModel MapToViewModel(ArchetypeDto dto)
+        {
+            return new ArchetypeViewModel
+            {
+                Id = dto.Id,
+                Domain = dto.Domain,
+                Description = dto.Description,
+                Architect = dto.Architect,
+                ExternalLink = dto.ExternalLink,
+                Icon = dto.Icon,
+                ArchetypeBeatIds = dto.ArchetypeBeatIds,
+                ArchetypeGenreIds = dto.ArchetypeGenreIds,
+                Beats = new List<BeatViewModel>(),
+                Genres = new List<GenreViewModel>()
+            };
+        }
+        
+        private BeatViewModel MapToBeatViewModel(ArchetypeBeatDto dto)
+        {
+            return new BeatViewModel
+            {
+                Id = dto.Id,
+                ArchetypeId = dto.ArchetypeId,
+                ParentSequence = dto.ParentSequence,
+                ChildSequence = dto.ChildSequence,
+                GrandchildSequence = dto.GrandchildSequence,
+                Name = dto.Name,
+                Description = dto.Description,
+                Prompt = dto.Prompt,
+                PercentOfStory = dto.PercentOfStory
+            };
+        }
+        
+        private GenreViewModel MapToGenreViewModel(ArchetypeGenreDto dto)
+        {
+            return new GenreViewModel
+            {
+                Id = dto.Id,
+                ArchetypeId = dto.ArchetypeId,
+                Name = dto.Name,
+                Description = dto.Description
+            };
+        }
+        
+        private ArchetypeDto MapToDto(ArchetypeViewModel viewModel)
+        {
+            return new ArchetypeDto
+            {
+                Id = viewModel.Id,
+                Domain = viewModel.Domain,
+                Description = viewModel.Description,
+                Architect = viewModel.Architect,
+                ExternalLink = viewModel.ExternalLink,
+                Icon = viewModel.Icon,
+                ArchetypeBeatIds = viewModel.ArchetypeBeatIds,
+                ArchetypeGenreIds = viewModel.ArchetypeGenreIds
+            };
+        }
+        
+        private ArchetypeBeatDto MapToBeatDto(BeatViewModel viewModel)
+        {
+            return new ArchetypeBeatDto
+            {
+                Id = viewModel.Id,
+                ArchetypeId = viewModel.ArchetypeId,
+                ParentSequence = viewModel.ParentSequence,
+                ChildSequence = viewModel.ChildSequence,
+                GrandchildSequence = viewModel.GrandchildSequence,
+                Name = viewModel.Name,
+                Description = viewModel.Description,
+                Prompt = viewModel.Prompt,
+                PercentOfStory = viewModel.PercentOfStory
+            };
+        }
+        
+        private ArchetypeGenreDto MapToDto(GenreViewModel viewModel)
+        {
+            return new ArchetypeGenreDto
+            {
+                Id = viewModel.Id,
+                ArchetypeId = viewModel.ArchetypeId,
+                Name = viewModel.Name,
+                Description = viewModel.Description
+            };
+        }
+        
+        #endregion
     }
 }
