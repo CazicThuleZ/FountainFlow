@@ -1,0 +1,479 @@
+@{
+    ViewBag.Title = "Story Elements";
+    ViewBag.SubTitle = "Archetypes";
+}
+@section styles
+{
+    <!-- Datatable css -->
+    <link href="~/vendor/datatables.net-bs5/css/dataTables.bootstrap5.min.css" rel="stylesheet" type="text/css" />
+    <link href="~/vendor/datatables.net-responsive-bs5/css/responsive.bootstrap5.min.css" rel="stylesheet"
+        type="text/css" />
+}
+
+@await Html.PartialAsync("~/Views/Shared/Partials/_PageTitle.cshtml")
+
+<div class="row">
+    <div class="col-4">
+        <div class="card">
+            <div class="card-body">
+                <div class="row mb-2">
+                    <div class="col-sm-5">
+                        <a href="javascript:void(0);" class="btn btn-danger mb-2"><i
+                                class="mdi mdi-plus-circle me-2"></i> Add Archetype</a>
+                    </div>
+                    <div class="col-sm-7">
+                        <div class="text-sm-end">
+                            <button type="button" class="btn btn-success mb-2 me-1"><i
+                                    class="mdi mdi-cog-outline"></i></button>
+                            <button type="button" class="btn btn-light mb-2 me-1">Import</button>
+                            <button type="button" class="btn btn-light mb-2">Export</button>
+                        </div>
+                    </div><!-- end col-->
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-centered w-100 dt-responsive nowrap" id="archetypes-datatable">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="all" style="width: 20px;">
+                                    <div class="form-check">
+                                        <input type="checkbox" class="form-check-input" id="customCheck1">
+                                        <label class="form-check-label" for="customCheck1">&nbsp;</label>
+                                    </div>
+                                </th>
+                                <th class="all">Domain</th>
+                                <th>Architect</th>
+                                <th>Rank</th>
+                                <th style="width: 85px;">Action</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            <tr>
+                                <td>
+                                    <div class="form-check">
+                                        <input type="checkbox" class="form-check-input" id="customCheck3">
+                                        <label class="form-check-label" for="customCheck3">&nbsp;</label>
+                                    </div>
+                                </td>
+                                <td>
+                                    <p class="m-0 d-inline-block align-middle font-16">
+                                        <a href=@Url.Action("ExternalLink", "ECommerce") class="text-body">Save The
+                                            Cat</a>
+                                        <br />
+                                    </p>
+                                </td>
+                                <td>
+                                    Blake Snyder
+                                </td>
+
+                                <td>
+                                    1
+                                </td>
+
+                                <td class="table-action">
+                                    <a href="javascript:void(0);" class="action-icon"> <i class="mdi mdi-eye"></i></a>
+                                    <a href="javascript:void(0);" class="action-icon"> <i
+                                            class="mdi mdi-square-edit-outline"></i></a>
+                                    <a href="javascript:void(0);" class="action-icon"> <i
+                                            class="mdi mdi-delete"></i></a>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td>
+                                    <div class="form-check">
+                                        <input type="checkbox" class="form-check-input" id="customCheck2">
+                                        <label class="form-check-label" for="customCheck2">&nbsp;</label>
+                                    </div>
+                                </td>
+                                <td>
+                                    <p class="m-0 d-inline-block align-middle font-16">
+                                        <a href=@Url.Action("ExternalLink", "ECommerce") class="text-body">Classic</a>
+                                        <br />
+                                    </p>
+                                </td>
+                                <td>
+                                    Aristotle
+                                </td>
+
+                                <td>
+                                    2
+                                </td>
+
+                                <td class="table-action">
+                                    <a href="javascript:void(0);" class="action-icon"> <i class="mdi mdi-eye"></i></a>
+                                    <a href="javascript:void(0);" class="action-icon"> <i
+                                            class="mdi mdi-square-edit-outline"></i></a>
+                                    <a href="javascript:void(0);" class="action-icon"> <i
+                                            class="mdi mdi-delete"></i></a>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td>
+                                    <div class="form-check">
+                                        <input type="checkbox" class="form-check-input" id="customCheck4">
+                                        <label class="form-check-label" for="customCheck4">&nbsp;</label>
+                                    </div>
+                                </td>
+                                <td>
+                                    <p class="m-0 d-inline-block align-middle font-16">
+                                        <a href=@Url.Action("ExternalLink", "ECommerce") class="text-body">Story
+                                            Circle</a>
+                                        <br />
+                                    </p>
+                                </td>
+                                <td>
+                                    Dan Harmon
+                                </td>
+
+                                <td>
+                                    3
+                                </td>
+
+                                <td class="table-action">
+                                    <a href="javascript:void(0);" class="action-icon"> <i class="mdi mdi-eye"></i></a>
+                                    <a href="javascript:void(0);" class="action-icon"> <i
+                                            class="mdi mdi-square-edit-outline"></i></a>
+                                    <a href="javascript:void(0);" class="action-icon"> <i
+                                            class="mdi mdi-delete"></i></a>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td>
+                                    <div class="form-check">
+                                        <input type="checkbox" class="form-check-input" id="customCheck5">
+                                        <label class="form-check-label" for="customCheck5">&nbsp;</label>
+                                    </div>
+                                </td>
+                                <td>
+                                    <p class="m-0 d-inline-block align-middle font-16">
+                                        <a href=@Url.Action("ExternalLink", "ECommerce") class="text-body">Hero
+                                            Journey</s></a>
+                                        <br />
+                                    </p>
+                                </td>
+                                <td>
+                                    Joseph Campbell
+                                </td>
+
+                                <td>
+                                    4
+                                </td>
+
+                                <td class="table-action">
+                                    <a href="javascript:void(0);" class="action-icon"> <i class="mdi mdi-eye"></i></a>
+                                    <a href="javascript:void(0);" class="action-icon"> <i
+                                            class="mdi mdi-square-edit-outline"></i></a>
+                                    <a href="javascript:void(0);" class="action-icon"> <i
+                                            class="mdi mdi-delete"></i></a>
+                                </td>
+                            </tr>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div> <!-- end card-body-->
+        </div> <!-- end card-->
+    </div> <!-- end col -->
+    <div class="col-8">
+
+        <div class="card">
+            <div class="card-body">
+                <div class="tab-content">
+                    <div class="tab-pane show active" id="justified-tabs-preview">
+                        <ul class="nav nav-pills bg-nav-pills nav-justified mb-3">
+                            <li class="nav-item">
+                                <a href="#beat1" data-bs-toggle="tab" aria-expanded="false"
+                                    class="nav-link rounded-0 active">
+                                    <i class="mdi mdi-home-variant d-md-none d-block"></i>
+                                    <span class="d-none d-md-block">Beats</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#genre1" data-bs-toggle="tab" aria-expanded="true" class="nav-link rounded-0">
+                                    <i class="mdi mdi-account-circle d-md-none d-block"></i>
+                                    <span class="d-none d-md-block">Genres</span>
+                                </a>
+                            </li>
+                        </ul>
+                        <div class="tab-content">
+                            <div class="tab-pane show active" id="beat1">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-lg-5">
+                                                <a href="javascript: void(0);" class="text-center d-block mb-4">
+                                                    <img src="~/images/SaveTheCat.png" class="img-fluid"
+                                                        style="max-width: 280px;" alt="Story-img" />
+                                                </a>
+
+                                            </div> <!-- end col -->
+                                            <div class="col-lg-7">
+                                                <form class="ps-lg-4">
+
+                                                    <h3 class="mt-0">Save The Cat </h3>
+                                                    <p class="mb-1">Added Date: 09/12/2018</p>
+
+                                                    <div class="mt-4">
+                                                        <p>
+                                                            The title, Save the Cat, is a screenwriting term coined by
+                                                            Blake Snyder and refers to a particular plot device. The
+                                                            save the cat method involves having the protagonist do
+                                                            something admirable toward the start of the story in order
+                                                            to establish them as a likable person and get the audience
+                                                            on their side. Having the protagonist save a cat can be
+                                                            literal or figurative.
+                                                        </p>
+                                                    </div>
+
+                                                </form>
+                                            </div> <!-- end col -->
+
+                                            <div class="col-xl-12">
+                                                <div class="card">
+                                                    <div
+                                                        class="card-header d-flex justify-content-between align-items-center">
+                                                        <h4 class="header-title">Story Elements</h4>
+                                                        <div class="dropdown">
+                                                            <a href="#" class="dropdown-toggle arrow-none card-drop"
+                                                                data-bs-toggle="dropdown" aria-expanded="false">
+                                                                <i class="mdi mdi-dots-vertical"></i>
+                                                            </a>
+                                                            <div class="dropdown-menu dropdown-menu-end">
+                                                                <!-- item-->
+                                                                <a href="javascript:void(0);"
+                                                                    class="dropdown-item">Edit</a>
+                                                                <!-- item-->
+                                                                <a href="javascript:void(0);"
+                                                                    class="dropdown-item">Examples</a>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="card-body py-0 mb-3" data-simplebar
+                                                        style="max-height: 315px;">
+                                                        <div class="timeline-alt py-0">
+                                                            <div class="timeline-item">
+                                                                <i
+                                                                    class="mdi mdi-upload bg-info-lighten text-info timeline-icon"></i>
+                                                                <div class="timeline-item-info">
+                                                                    <a href="#"
+                                                                        class="text-info fw-bold mb-1 d-block">Opening
+                                                                        Image</a>
+                                                                    <small>A snapshot that sets the tone and shows the
+                                                                        hero’s starting point (often the first visual or
+                                                                        scene)</small>
+                                                                    <p class="mb-0 pb-2">
+                                                                        <small class="text-muted">Page 1</small>
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="timeline-item">
+                                                                <i
+                                                                    class="mdi mdi-upload bg-info-lighten text-info timeline-icon"></i>
+                                                                <div class="timeline-item-info">
+                                                                    <a href="#"
+                                                                        class="text-info fw-bold mb-1 d-block">Theme
+                                                                        Stated</a>
+                                                                    <small>A hint at the story’s central theme or
+                                                                        lesson, usually delivered through dialogue
+                                                                        around the beginning</small>
+                                                                    <p class="mb-0 pb-2">
+                                                                        <small class="text-muted">Page 2</small>
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="timeline-item">
+                                                                <i
+                                                                    class="mdi mdi-upload bg-info-lighten text-info timeline-icon"></i>
+                                                                <div class="timeline-item-info">
+                                                                    <a href="#"
+                                                                        class="text-info fw-bold mb-1 d-block">Set-Up</a>
+                                                                    <small>Introduction of the hero’s ordinary world,
+                                                                        characters, and status quo in the first
+                                                                        pages</small>
+                                                                    <p class="mb-0 pb-2">
+                                                                        <small class="text-muted">Page 3</small>
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="timeline-item">
+                                                                <i
+                                                                    class="mdi mdi-upload bg-info-lighten text-info timeline-icon"></i>
+                                                                <div class="timeline-item-info">
+                                                                    <a href="#"
+                                                                        class="text-info fw-bold mb-1 d-block">Catalyst</a>
+                                                                    <small>An inciting incident that disrupts the status
+                                                                        quo and kicks the story into motion</small>
+                                                                    <p class="mb-0 pb-2">
+                                                                        <small class="text-muted">Page 4</small>
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="timeline-item">
+                                                                <i
+                                                                    class="mdi mdi-upload bg-info-lighten text-info timeline-icon"></i>
+                                                                <div class="timeline-item-info">
+                                                                    <a href="#"
+                                                                        class="text-info fw-bold mb-1 d-block">Debate</a>
+                                                                    <small>A period where the hero hesitates or debates
+                                                                        what to do next, often expressing doubt or
+                                                                        reluctance</small>
+                                                                    <p class="mb-0 pb-2">
+                                                                        <small class="text-muted">Page 5</small>
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <!-- end timeline -->
+                                                    </div> <!-- end simplebar -->
+                                                </div>
+                                                <!-- end card-->
+                                            </div>
+                                        </div> <!-- end row-->
+                                    </div> <!-- end card-body-->
+                                </div> <!-- end card-->
+                            </div>
+                            <div class="tab-pane" id="genre1">
+                                <div class="col-md-6 col-xxl-12">
+                                    <div class="card d-block">
+                                        <div class="card-body">
+                                            <div class="dropdown card-widgets">
+                                                <a href="#" class="dropdown-toggle arrow-none" data-bs-toggle="dropdown"
+                                                    aria-expanded="false">
+                                                    <i class="ri-more-fill"></i>
+                                                </a>
+                                                <div class="dropdown-menu dropdown-menu-end">
+                                                    <!-- item-->
+                                                    <a href="javascript:void(0);" class="dropdown-item"><i
+                                                            class="mdi mdi-pencil me-1"></i>Edit</a>
+                                                    <!-- item-->
+                                                    <a href="javascript:void(0);" class="dropdown-item"><i
+                                                            class="mdi mdi-delete me-1"></i>Delete</a>
+                                                    <!-- item-->
+                                                    <a href="javascript:void(0);" class="dropdown-item"><i
+                                                            class="mdi mdi-email-outline me-1"></i>Invite</a>
+                                                    <!-- item-->
+                                                    <a href="javascript:void(0);" class="dropdown-item"><i
+                                                            class="mdi mdi-exit-to-app me-1"></i>Leave</a>
+                                                </div>
+                                            </div>
+                                            <!-- project title-->
+                                            <h4 class="mt-0">
+                                                <a href=@Url.Action("GenreDetails", "Apps") class="text-title">Golden
+                                                    Fleece</a>
+                                            </h4>
+
+                                            <p class="text-muted font-13 my-3">ts name pays homage to the Greek myth of
+                                                Jason and the Argonauts. GF is usually a “road trip” (O Brother, Where
+                                                Art Thou; Planes, Trains & Automobiles); however, sometimes the journey
+                                                can be more of a spiritual one (Chariots of Fire, Bad News Bears). GF
+                                                contains a “road” which can span oceans, time, or even down the street
+                                                as long as growth occurs. It contains a “team” or a “buddy” which our
+                                                hero needs to guide him or her along the way, and a “prize” which is
+                                                sought and which is primal: a return to home, a treasure, regaining
+                                                one’s birthright.<a href="javascript:void(0);"
+                                                    class="fw-bold text-muted">view more</a>
+                                            </p>
+
+                                            <!-- project detail-->
+                                            <p class="mb-1">
+                                                <span class="pe-2 text-nowrap mb-2 d-inline-block">
+                                                    <i class="mdi mdi-format-list-bulleted-type text-muted"></i>
+                                                    <b>11</b> Examples
+                                                </span>
+                                                <span class="text-nowrap mb-2 d-inline-block">
+                                                    <i class="mdi mdi-comment-multiple-outline text-muted"></i>
+                                                    <b>55</b> Hybrids
+                                                </span>
+                                            </p>
+                                        </div> <!-- end card-body-->
+
+                                    </div> <!-- end card-->
+
+                                    <div class="card d-block">
+                                        <div class="card-body">
+                                            <div class="dropdown card-widgets">
+                                                <a href="#" class="dropdown-toggle arrow-none" data-bs-toggle="dropdown"
+                                                    aria-expanded="false">
+                                                    <i class="ri-more-fill"></i>
+                                                </a>
+                                                <div class="dropdown-menu dropdown-menu-end">
+                                                    <!-- item-->
+                                                    <a href="javascript:void(0);" class="dropdown-item"><i
+                                                            class="mdi mdi-pencil me-1"></i>Edit</a>
+                                                    <!-- item-->
+                                                    <a href="javascript:void(0);" class="dropdown-item"><i
+                                                            class="mdi mdi-delete me-1"></i>Delete</a>
+                                                    <!-- item-->
+                                                    <a href="javascript:void(0);" class="dropdown-item"><i
+                                                            class="mdi mdi-email-outline me-1"></i>Invite</a>
+                                                    <!-- item-->
+                                                    <a href="javascript:void(0);" class="dropdown-item"><i
+                                                            class="mdi mdi-exit-to-app me-1"></i>Leave</a>
+                                                </div>
+                                            </div>
+                                            <!-- project title-->
+                                            <h4 class="mt-0">
+                                                <a href=@Url.Action("GenreDetails", "Apps") class="text-title">Monster
+                                                    In The House</a>
+                                            </h4>
+
+                                            <p class="text-muted font-13 my-3">Considered one of the oldest and the most
+                                                primal type of story, MITH contains a “monster” who is supernatural in
+                                                powers (this power can be insanity, not necessarily magical) and is evil
+                                                at its core; a “house” – an enclosed space containing a family unit, a
+                                                town, or a world; and a “sin” – someone who is guilty of bringing the
+                                                monster into the house. The sin can be an actual sin (the sin of
+                                                infidelity in Fatal Attraction), hubris (Jurrasic Park), or even
+                                                ignorance (Alien). MITH tales also often include “The Half Man”: a
+                                                character who has encountered the monster before, or has prior knowledge
+                                                of it, and has come away damaged (Quint in Jaws).<a
+                                                    href="javascript:void(0);" class="fw-bold text-muted">view more</a>
+                                            </p>
+
+                                            <!-- project detail-->
+                                            <p class="mb-1">
+                                                <span class="pe-2 text-nowrap mb-2 d-inline-block">
+                                                    <i class="mdi mdi-format-list-bulleted-type text-muted"></i>
+                                                    <b>21</b> Examples
+                                                </span>
+                                                <span class="text-nowrap mb-2 d-inline-block">
+                                                    <i class="mdi mdi-comment-multiple-outline text-muted"></i>
+                                                    <b>71</b> Hybrids
+                                                </span>
+                                            </p>
+                                        </div> <!-- end card-body-->
+
+                                    </div> <!-- end card-->
+
+                                </div> <!-- end col -->
+                            </div>
+                        </div>
+                    </div> <!-- end preview-->
+                </div> <!-- end tab-content-->
+            </div> <!-- end card-body -->
+        </div> <!-- end card-->
+
+    </div> <!-- end col -->
+</div>
+<!-- end row -->
+
+
+@section scripts
+{
+    <!-- Datatable js -->
+    <script src="~/vendor/datatables.net/js/jquery.dataTables.min.js"></script>
+    <script src="~/vendor/datatables.net-bs5/js/dataTables.bootstrap5.min.js"></script>
+    <script src="~/vendor/datatables.net-responsive/js/dataTables.responsive.min.js"></script>
+    <script src="~/vendor/datatables.net-responsive-bs5/js/responsive.bootstrap5.min.js"></script>
+    <script src="~/vendor/jquery-datatables-checkboxes/js/dataTables.checkboxes.min.js"></script>
+}

@@ -481,3 +481,4 @@ appsettings.Development.json
 appsettings.json
 src/FountainFlow.UI/wwwroot/lib/
 src/FountainFlow.UI/wwwroot/Images/
+src/FountainFlow.UI/wwwroot/vendor/
