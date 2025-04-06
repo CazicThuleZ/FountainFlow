@@ -79,6 +79,7 @@ public class DbInitializer
                     Description = "Basic 3 act story",
                     ExternalLink = "https://aristotle.com/",
                     Icon = "Aristotle_Story.png",
+                    Rank = 1,
                     CreatedUTC = DateTime.UtcNow,
                     UpdatedUTC = DateTime.UtcNow
                 },
@@ -90,6 +91,7 @@ public class DbInitializer
                     Description = "A story structure model for screenwriting",
                     ExternalLink = "https://savethecat.com/",
                     Icon = "saveTheCatLogo.png",
+                    Rank = 2,
                     CreatedUTC = DateTime.UtcNow,
                     UpdatedUTC = DateTime.UtcNow
                 },
@@ -101,6 +103,7 @@ public class DbInitializer
                     Description = "Dan Harmon's screenwriting model",
                     ExternalLink = "https://www.harmontown.com/",
                     Icon = "Story_Circle_Icon.png",
+                    Rank = 3,
                     CreatedUTC = DateTime.UtcNow,
                     UpdatedUTC = DateTime.UtcNow
                 },
@@ -112,6 +115,7 @@ public class DbInitializer
                     Description = "Pursuit of the hero archetype",
                     ExternalLink = "https://www.jcf.org/",
                     Icon = "Joseph Cambell.png",
+                    Rank = 4,
                     CreatedUTC = DateTime.UtcNow,
                     UpdatedUTC = DateTime.UtcNow
                 }

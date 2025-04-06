@@ -15,7 +15,8 @@ public class Archetype
     public string Description { get; set; }
     public string Architect { get; set; }
     public string ExternalLink { get; set; }
-    public string Icon { get; set; }
+    public int Rank { get; set; } // Sort and priority order 
+    public string Icon { get; set; }  // URL to an icon representing the archetype
     // Navigation properties
     public ICollection<ArchetypeBeat> ArchetypeBeats { get; set; } = new List<ArchetypeBeat>();
     public ICollection<ArchetypeGenre> ArchetypeGenres { get; set; } = new List<ArchetypeGenre>();
