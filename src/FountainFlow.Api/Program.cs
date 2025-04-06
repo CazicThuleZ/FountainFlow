@@ -32,13 +32,14 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-try
-{
+try {
     DbInitializer.InitDb(app);
-}
-catch (Exception ex)
-{
-    Console.WriteLine(ex.Message);
+} catch (Exception ex) {
+    Console.WriteLine($"Database initialization failed: {ex.Message}");
+    Console.WriteLine(ex.StackTrace);
+    if (ex.InnerException != null) {
+        Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+    }
 }
 
 app.Run();

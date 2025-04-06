@@ -48,6 +48,7 @@ public class DbInitializer
             };
 
             context.Story.AddRange(stories);
+            context.SaveChanges();
         }
 
         if (!context.Archetypes.Any())
@@ -57,6 +58,16 @@ public class DbInitializer
             var aristotleId = Guid.NewGuid();
             var storyCircleId = Guid.NewGuid();
             var heroJourneyId = Guid.NewGuid();
+
+            try
+            {
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in SeedData: {ex.Message}");
+                throw;
+            }
 
             var archetypes = new List<Archetype>()
             {
@@ -207,6 +218,7 @@ public class DbInitializer
             };
 
             context.ArchetypeBeats.AddRange(archetypeBeats);
+            context.SaveChanges();
 
             // Add ArchetypeGenres
             var archetypeGenres = new List<ArchetypeGenre>()
@@ -272,8 +284,7 @@ public class DbInitializer
             };
 
             context.ArchetypeGenres.AddRange(archetypeGenres);
+            context.SaveChanges();
         }
-
-        context.SaveChanges();
     }
 }
