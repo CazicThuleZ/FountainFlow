@@ -11,6 +11,7 @@ public class ArchetypeDto
     public string Architect { get; set; }
     public string ExternalLink { get; set; }
     public string Icon { get; set; }
+    public int Rank { get; set; }
     public ICollection<Guid> ArchetypeBeatIds { get; set; }
     public ICollection<Guid> ArchetypeGenreIds { get; set; }
 }

@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using FountainFlowUI.DTOs;
 using FountainFlowUI.Interfaces;
@@ -30,7 +32,9 @@ namespace FountainFlowUI.Controllers
             try
             {
                 var archetypeDtos = await _archetypesRepository.GetArchetypesAsync();
-                var archetypeViewModels = archetypeDtos.Select(MapToViewModel).ToList();
+                var archetypeViewModels = archetypeDtos.Select(MapToViewModel)
+                    .OrderBy(a => a.Rank) // Sort by Rank
+                    .ToList();
                 
                 return Json(archetypeViewModels);
             }
@@ -205,6 +209,55 @@ namespace FountainFlowUI.Controllers
             }
         }
 
+        [HttpPost]
+        public async Task<IActionResult> ExportArchetypes([FromBody] List<Guid> archetypeIds)
+        {
+            try
+            {
+                if (archetypeIds == null || !archetypeIds.Any())
+                {
+                    return BadRequest("No archetypes selected for export");
+                }
+
+                var exportData = new List<ArchetypeExportModel>();
+
+                foreach (var id in archetypeIds)
+                {
+                    var archetypeDto = await _archetypesRepository.GetArchetypeByIdAsync(id);
+                    if (archetypeDto == null || archetypeDto.Id == Guid.Empty)
+                    {
+                        continue; // Skip if archetype not found
+                    }
+
+                    var archetypeViewModel = MapToViewModel(archetypeDto);
+                    
+                    // Get beats for this archetype
+                    var beats = await _archetypesRepository.GetArchetypeBeatsByArchetypeIdIdAsync(id);
+                    archetypeViewModel.Beats = beats.Select(MapToBeatViewModel).ToList();
+                    
+                    // Get genres for this archetype
+                    var genres = await _archetypesRepository.GetArchetypeGenresByArchetypeIdIdAsync(id);
+                    archetypeViewModel.Genres = genres.Select(MapToGenreViewModel).ToList();
+
+                    // Add to export data
+                    exportData.Add(new ArchetypeExportModel
+                    {
+                        Archetype = archetypeViewModel,
+                        Beats = archetypeViewModel.Beats,
+                        Genres = archetypeViewModel.Genres
+                    });
+                }
+
+                // Return the export data as JSON
+                return Json(new { success = true, data = exportData });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error exporting archetypes");
+                return StatusCode(500, "An error occurred while exporting archetypes");
+            }
+        }
+
         #region Mapping Methods
         
         private ArchetypeViewModel MapToViewModel(ArchetypeDto dto)
@@ -217,6 +270,7 @@ namespace FountainFlowUI.Controllers
                 Architect = dto.Architect,
                 ExternalLink = dto.ExternalLink,
                 Icon = dto.Icon,
+                Rank = dto.Rank,
                 ArchetypeBeatIds = dto.ArchetypeBeatIds,
                 ArchetypeGenreIds = dto.ArchetypeGenreIds,
                 Beats = new List<BeatViewModel>(),
@@ -261,6 +315,7 @@ namespace FountainFlowUI.Controllers
                 Architect = viewModel.Architect,
                 ExternalLink = viewModel.ExternalLink,
                 Icon = viewModel.Icon,
+                Rank = viewModel.Rank,
                 ArchetypeBeatIds = viewModel.ArchetypeBeatIds,
                 ArchetypeGenreIds = viewModel.ArchetypeGenreIds
             };

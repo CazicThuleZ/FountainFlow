@@ -29,7 +29,11 @@ namespace FountainFlow.Api.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ArchetypeReadDto>>> GetArchetypes()
         {
-            var archetypes = await _ffDbContext.Archetypes.Include(a => a.ArchetypeBeats).Include(a => a.ArchetypeGenres).ToListAsync();
+            var archetypes = await _ffDbContext.Archetypes
+                .Include(a => a.ArchetypeBeats)
+                .Include(a => a.ArchetypeGenres)
+                .OrderBy(a => a.Rank)  // Sort by Rank
+                .ToListAsync();
             return Ok(_mapper.Map<IEnumerable<ArchetypeReadDto>>(archetypes));
         }
 

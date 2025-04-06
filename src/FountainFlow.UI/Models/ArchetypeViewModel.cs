@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace FountainFlowUI.Models;
 
@@ -10,10 +11,10 @@ public class ArchetypeViewModel
     public string Architect { get; set; }
     public string ExternalLink { get; set; }
     public string Icon { get; set; }
+    public int Rank { get; set; }
     public ICollection<Guid> ArchetypeBeatIds { get; set; }
     public ICollection<Guid> ArchetypeGenreIds { get; set; }
     public List<ArchetypeViewModel> Archetypes { get; set; }
     public List<GenreViewModel> Genres { get; set; }
-    public List<BeatViewModel> Beats { get; set; }    
-
+    public List<BeatViewModel> Beats { get; set; }
 }

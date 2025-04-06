@@ -17,10 +17,10 @@
 <div class="row">
     <div class="col-4">
         <div class="card">
-            <div class="card-body">
+            <div class="card-body"> 
                 <div class="row mb-2">
                     <div class="col-sm-5">
-                        <a href="javascript:void(0);" class="btn btn-danger mb-2"><i
+                        <a href="javascript:void(0);" class="btn btn-primary mb-2"><i
                                 class="mdi mdi-plus-circle me-2"></i> Add Archetype</a>
                     </div>
                     <div class="col-sm-7">
@@ -28,7 +28,7 @@
                             <button type="button" class="btn btn-success mb-2 me-1"><i
                                     class="mdi mdi-cog-outline"></i></button>
                             <button type="button" class="btn btn-light mb-2 me-1">Import</button>
-                            <button type="button" class="btn btn-light mb-2">Export</button>
+                            <button type="button" class="btn btn-light mb-2" id="export-btn">Export</button>
                         </div>
                     </div><!-- end col-->
                 </div>
@@ -159,6 +159,11 @@
     
     <script>
         $(document).ready(function () {
+            // Handle export button click
+            $('#export-btn').on('click', function() {
+                handleExport();
+            });
+            
             // Initialize variables
             let archetypes = [];
             let selectedArchetypeId = null;
@@ -196,7 +201,7 @@
                 tableBody.empty();
                 
                 archetypes.forEach((archetype, index) => {
-                    const row = `
+                    const row = `w
                         <tr data-archetype-id="${archetype.id}">
                             <td>
                                 <div class="form-check">
@@ -214,7 +219,7 @@
                                 ${archetype.architect}
                             </td>
                             <td>
-                                ${index + 1}
+                                ${archetype.rank}
                             </td>
                             <td class="table-action">
                                 <a href="javascript:void(0);" class="action-icon view-archetype"> <i class="mdi mdi-eye"></i></a>
@@ -356,6 +361,54 @@
                 } else {
                     genresContent.append('<div class="text-center p-3">No genres available for this archetype.</div>');
                 }
+            }
+            
+            function handleExport() {
+                // Get all checked archetypes
+                const checkedArchetypeIds = [];
+                $('#archetypes-datatable tbody input[type="checkbox"]:checked').each(function() {
+                    const archetypeId = $(this).closest('tr').data('archetype-id');
+                    if (archetypeId) {
+                        checkedArchetypeIds.push(archetypeId);
+                    }
+                });
+                
+                if (checkedArchetypeIds.length === 0) {
+                    alert('Please select at least one archetype to export.');
+                    return;
+                }
+                
+                // Call the export endpoint
+                $.ajax({
+                    url: '@Url.Action("ExportArchetypes", "Archetypes")',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(checkedArchetypeIds),
+                    success: function(response) {
+                        if (response.success && response.data) {
+                            // Create a Blob with the JSON data
+                            const jsonData = JSON.stringify(response.data, null, 2);
+                            const blob = new Blob([jsonData], { type: 'application/json' });
+                            
+                            // Create a temporary link element to trigger the download
+                            const link = document.createElement('a');
+                            link.href = URL.createObjectURL(blob);
+                            
+                            // Prompt user for save location using the browser's save dialog
+                            link.download = 'archetypes_export.json';
+                            link.click();
+                            
+                            // Clean up
+                            URL.revokeObjectURL(link.href);
+                        } else {
+                            alert('Failed to export archetypes. Please try again.');
+                        }
+                    },
+                    error: function(error) {
+                        console.error('Error exporting archetypes:', error);
+                        alert('An error occurred while exporting archetypes. Please try again.');
+                    }
+                });
             }
         });
     </script>
