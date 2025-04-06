@@ -7,10 +7,12 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:80
-      - ConnectionStrings__DefaultConnection=Server=192.168.1.10:2665;User Id=winslow;Password=zJu@@@T55!;Database=FountainFlow;      
+      - ConnectionStrings__DefaultConnection=Server=postgres:5432;User Id=postgres;Password=postgrespw;Database=FountainFlow;      
       - IdentityServiceUrl=http://fountainflow-svc
     ports:
       - 6087:80
+    networks:
+      - RallosZek-docker      
   ui:
     build:
       context: .
@@ -18,6 +20,11 @@ services:
     environment:
       - ASPNETCORE_URLS=http://+:80      
     ports:
-      - "6266:80"      
+      - "6266:80"
+    networks:
+      - RallosZek-docker            
 volumes:
   pgdata:
+networks:
+  RallosZek-docker:
+    external: true  
