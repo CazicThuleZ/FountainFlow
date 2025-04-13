@@ -20,7 +20,7 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/src/FountainFlow.UI/bin/Debug/net8.0/FountainFlowUI.dll",
+            "program": "${workspaceFolder}/src/FountainFlow.UI/bin/Debug/net9.0/FountainFlow.UI.dll",
             "args": [],
             "cwd": "${workspaceFolder}/src/FountainFlow.UI",
             "stopAtEntry": false,
@@ -33,7 +33,7 @@
                 "ASPNETCORE_ENVIRONMENT": "Development"
             },
             "sourceFileMap": {
-                "/Views": "${workspaceFolder}/src/FountainFlowUI/Views"
+                "/Views": "${workspaceFolder}/src/FountainFlow.UI/Views"
             }
         },
         {
