@@ -1,9 +1,11 @@
 using System;
 using System.Text;
 using System.Text.Json;
+using System.Transactions;
 using FountainFlowUI.DTOs;
 using FountainFlowUI.Helpers;
 using FountainFlowUI.Interfaces;
+using FountainFlowUI.Models;
 
 namespace FountainFlowUI.Repository;
 
@@ -287,6 +289,7 @@ public class ArchetypesRepository : IArchetypesRepository
             throw new RepositoryException("An unexpected error occurred while creating the archetype", ex);
         }
     }
+    
     public async Task<ArchetypeGenreDto> CreateArchetypeGenreAsync(ArchetypeGenreDto archetypeGenreDto)
     {
         try
@@ -405,6 +408,100 @@ public class ArchetypesRepository : IArchetypesRepository
             );
         }
     }
+    
+    public async Task<bool> ImportArchetypesAsync(List<ArchetypeExportModel> archetypes)
+    {
+        try
+        {
+            _logger.LogInformation("Importing {Count} archetypes", archetypes.Count);
+            
+            // Use a transaction scope to ensure all-or-nothing import
+            using var scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled);
+            
+            foreach (var archetypeModel in archetypes)
+            {
+                // Create new archetype with new ID
+                var archetypeDto = new ArchetypeDto
+                {
+                    Domain = archetypeModel.Archetype.Domain,
+                    Description = archetypeModel.Archetype.Description,
+                    Architect = archetypeModel.Archetype.Architect,
+                    ExternalLink = archetypeModel.Archetype.ExternalLink,
+                    Icon = archetypeModel.Archetype.Icon,
+                    Rank = archetypeModel.Archetype.Rank,
+                    ArchetypeBeatIds = new List<Guid>(),
+                    ArchetypeGenreIds = new List<Guid>()
+                };
+                
+                // Create the archetype
+                var createdArchetype = await CreateArchetypeAsync(archetypeDto);
+                
+                if (createdArchetype == null || createdArchetype.Id == Guid.Empty)
+                {
+                    _logger.LogError("Failed to create archetype {Domain}", archetypeDto.Domain);
+                    throw new RepositoryException($"Failed to create archetype {archetypeDto.Domain}");
+                }
+                
+                // Create beats for this archetype
+                foreach (var beat in archetypeModel.Beats)
+                {
+                    var beatDto = new ArchetypeBeatDto
+                    {
+                        ArchetypeId = createdArchetype.Id,
+                        ParentSequence = beat.ParentSequence,
+                        ChildSequence = beat.ChildSequence,
+                        GrandchildSequence = beat.GrandchildSequence,
+                        Name = beat.Name,
+                        Description = beat.Description,
+                        Prompt = beat.Prompt,
+                        PercentOfStory = beat.PercentOfStory
+                    };
+                    
+                    // Create the beat using the API
+                    using var beatResponse = await _httpClient.PostAsJsonAsync(
+                        $"{_apiBaseUrl}/api/v1.0/ArchetypeBeats", beatDto);
+                    
+                    if (!beatResponse.IsSuccessStatusCode)
+                    {
+                        var errorContent = await beatResponse.Content.ReadAsStringAsync();
+                        _logger.LogError("Failed to create beat {Name}. Status: {StatusCode}, Error: {Error}",
+                            beatDto.Name, beatResponse.StatusCode, errorContent);
+                        throw new RepositoryException($"Failed to create beat {beatDto.Name}");
+                    }
+                }
+                
+                // Create genres for this archetype
+                foreach (var genre in archetypeModel.Genres)
+                {
+                    var genreDto = new ArchetypeGenreDto
+                    {
+                        ArchetypeId = createdArchetype.Id,
+                        Name = genre.Name,
+                        Description = genre.Description
+                    };
+                    
+                    // Create the genre
+                    var createdGenre = await CreateArchetypeGenreAsync(genreDto);
+                    
+                    if (createdGenre == null || createdGenre.Id == Guid.Empty)
+                    {
+                        _logger.LogError("Failed to create genre {Name}", genreDto.Name);
+                        throw new RepositoryException($"Failed to create genre {genreDto.Name}");
+                    }
+                }
+            }
+            
+            // Complete the transaction
+            scope.Complete();
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while importing archetypes");
+            throw new RepositoryException("An unexpected error occurred while importing archetypes", ex);
+        }
+    }
+    
     private void ValidateSaveBeatsRequest(SaveBeatsRequestDto request)
     {
         if (request == null)
@@ -447,6 +544,7 @@ public class ArchetypesRepository : IArchetypesRepository
         if (beat.PercentOfStory < 0 || beat.PercentOfStory > 100)
             throw new ArgumentException("PercentOfStory must be between 0 and 100");
     }
+    
     private void ValidateSequenceHierarchy(List<ArchetypeBeatDto> beats)
     {
         // Only validate parent sequences for top-level beats (those without a ChildSequence)

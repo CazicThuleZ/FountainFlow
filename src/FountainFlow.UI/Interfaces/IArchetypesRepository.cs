@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using FountainFlowUI.DTOs;
+using FountainFlowUI.Models;
 
 namespace FountainFlowUI.Interfaces;
 public interface IArchetypesRepository
@@ -13,4 +15,5 @@ public interface IArchetypesRepository
     Task<ArchetypeGenreDto> CreateArchetypeGenreAsync(ArchetypeGenreDto archetypeGenreDto);
     Task<bool> DeleteArchetypeGenreAsync(Guid id);
     Task<bool> SaveBeatsAsync(SaveBeatsRequestDto request);
+    Task<bool> ImportArchetypesAsync(List<ArchetypeExportModel> archetypes);
 }
