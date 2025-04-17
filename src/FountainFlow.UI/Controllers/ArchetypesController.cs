@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using FountainFlowUI.DTOs;
 using FountainFlowUI.Interfaces;
 using FountainFlowUI.Models;
+using Microsoft.AspNetCore.Hosting; // Added for IWebHostEnvironment
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -18,11 +19,13 @@ namespace FountainFlowUI.Controllers
     {
         private readonly ILogger<ArchetypesController> _logger;
         private readonly IArchetypesRepository _archetypesRepository;
+        private readonly IWebHostEnvironment _environment; // Added
 
-        public ArchetypesController(ILogger<ArchetypesController> logger, IArchetypesRepository archetypesRepository)
+        public ArchetypesController(ILogger<ArchetypesController> logger, IArchetypesRepository archetypesRepository, IWebHostEnvironment environment) // Added environment
         {
             _logger = logger;
             _archetypesRepository = archetypesRepository;
+            _environment = environment; // Added
         }
 
         public IActionResult Archetype() => View();
@@ -111,19 +114,69 @@ namespace FountainFlowUI.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateArchetype([FromBody] ArchetypeViewModel viewModel)
+        public async Task<IActionResult> CreateArchetype([FromForm] ArchetypeViewModel viewModel, IFormFile iconFile) // Changed to FromForm, added iconFile
         {
+            if (!ModelState.IsValid)
+            {
+                // Consider returning specific validation errors
+                return BadRequest(ModelState);
+            }
+
+            string relativeImagePath = null; // Initialize path as null
+
             try
             {
+                // --- File Upload Handling ---
+                if (iconFile != null && iconFile.Length > 0)
+                {
+                    // Basic validation (consider adding more robust checks - size, type)
+                    if (iconFile.Length > 5 * 1024 * 1024) // Example: 5MB limit
+                    {
+                        return BadRequest("Icon file size exceeds the limit (5MB).");
+                    }
+                    if (!iconFile.ContentType.StartsWith("image/"))
+                    {
+                         return BadRequest("Invalid file type. Please upload an image.");
+                    }
+
+                    var uploadsFolder = Path.Combine(_environment.WebRootPath, "images", "Thumbnails");
+                    Directory.CreateDirectory(uploadsFolder); // Ensure the directory exists
+
+                    // Generate a unique filename to prevent conflicts
+                    var uniqueFileName = Guid.NewGuid().ToString() + "_" + Path.GetFileName(iconFile.FileName);
+                    var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                    _logger.LogInformation("Saving uploaded icon file to: {FilePath}", filePath);
+                    using (var fileStream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await iconFile.CopyToAsync(fileStream);
+                    }
+
+                    // Use forward slashes for the relative web path
+                    relativeImagePath = $"/images/Thumbnails/{uniqueFileName}";
+                    _logger.LogInformation("Relative image path set to: {RelativePath}", relativeImagePath);
+                }
+                else
+                {
+                    _logger.LogInformation("No icon file provided for archetype creation.");
+                }
+                // --- End File Upload Handling ---
+
                 var archetypeDto = MapToDto(viewModel);
+                archetypeDto.Icon = relativeImagePath; // Set the path (will be null if no file uploaded)
+
                 var createdArchetype = await _archetypesRepository.CreateArchetypeAsync(archetypeDto);
 
-                return CreatedAtAction(nameof(GetArchetype), new { id = createdArchetype.Id }, MapToViewModel(createdArchetype));
+                // Map the *created* DTO back to ViewModel for the response
+                var createdViewModel = MapToViewModel(createdArchetype);
+
+                return CreatedAtAction(nameof(GetArchetype), new { id = createdViewModel.Id }, createdViewModel);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error creating archetype");
-                return StatusCode(500, "An error occurred while creating the archetype");
+                _logger.LogError(ex, "Error creating archetype with domain {Domain}", viewModel.Domain);
+                // Avoid exposing detailed exception info to the client in production
+                return StatusCode(500, "An internal error occurred while creating the archetype.");
             }
         }
 
@@ -287,18 +340,19 @@ namespace FountainFlowUI.Controllers
             }
         }
 
-        [HttpPost]
-        public async Task<IActionResult> ImportArchetypes(List<IFormFile> files)
+        [HttpPost("ImportArchetypes")] // Added explicit route attribute
+        public async Task<IActionResult> ImportArchetypes(IFormFile file)
         {
             try
             {
-                if (files == null || files.Count == 0)
+                // Check if a file was actually uploaded and bound
+                if (file == null || file.Length == 0)
                 {
-                    _logger.LogWarning("No files provided for import");
-                    return BadRequest("No files provided for import");
+                    _logger.LogWarning("No file provided or file is empty for import");
+                    return BadRequest("No file provided for import"); // Keep consistent error message
                 }
 
-                var file = files[0];
+                // No longer need to get the first file from a list, 'file' is the parameter
                 if (file.Length > 0)
                 {
                     _logger.LogInformation("Processing import file: {FileName}, Size: {FileSize} bytes", file.FileName, file.Length);

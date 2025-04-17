@@ -1,11 +1,17 @@
 $(document).ready(function () {
+    // console.log("archetype-management.js: Document ready."); // DEBUG REMOVED
     // --- Configuration & Constants ---
     const archetypesTable = $('#archetypes-datatable');
     const tableContainer = archetypesTable.closest('.table-container');
     const importModal = $('#importModal');
     const importSubmitBtn = document.querySelector("#import-submit-btn");
-    const defaultImagePath = '/images/default-archetype.png'; // Configurable default image
-
+    const addArchetypeModal = $('#addArchetypeModal'); // Added
+    const addArchetypeForm = $('#addArchetypeForm'); // Added
+    const saveArchetypeBtn = $('#save-archetype-btn'); // Added
+    const addArchetypeBtn = $('#add-archetype-btn'); // Added
+    // console.log("archetype-management.js: Add button found?", addArchetypeBtn.length); // DEBUG REMOVED
+    // console.log("archetype-management.js: Add modal found?", addArchetypeModal.length); // DEBUG REMOVED
+    const defaultImagePath = '/images/Thumbnails/archetyp_default.png'; // Default image path
     // URLs from data attributes
     const urls = {
         getArchetypes: archetypesTable.data('get-archetypes-url'),
@@ -13,7 +19,8 @@ $(document).ready(function () {
         deleteArchetype: archetypesTable.data('delete-archetype-url'),
         deleteMultiple: archetypesTable.data('delete-multiple-url'),
         exportArchetypes: archetypesTable.data('export-url'),
-        importArchetypes: archetypesTable.data('import-url')
+        importArchetypes: archetypesTable.data('import-url'),
+        createArchetype: '/Archetypes/CreateArchetype' // Added - Assuming standard URL pattern
     };
 
     // Check if URLs are defined
@@ -21,12 +28,13 @@ $(document).ready(function () {
         if (!urls[key]) {
             console.error(`Missing URL for ${key}. Check data attributes on #archetypes-datatable.`);
             // Optionally disable functionality or show an error message to the user
-            // return; 
+            // return;
         }
     }
 
     let selectedArchetypeId = null;
     let dataTableInstance = null;
+    let archetypeIconDropzoneInstance = null; // Added for Dropzone instance
 
     // --- Function Definitions ---
 
@@ -407,7 +415,88 @@ $(document).ready(function () {
                 toggleLoadingOverlay(false); // Hide loading indicator
             }
         });
-    }
+    } // End of handleExport function
+
+    /**
+     * Handles saving a new archetype from the modal form.
+     */
+    function handleSaveArchetype() {
+        // Basic Validation
+        if (!addArchetypeForm[0].checkValidity()) {
+            addArchetypeForm[0].reportValidity();
+            return;
+        }
+
+        // Use FormData to include the file
+        let formData = new FormData(addArchetypeForm[0]); // Get form fields
+
+        // Append other fields manually if they don't have 'name' attributes or need specific formatting
+        formData.append('domain', $('#archetype-domain').val());
+        formData.append('architect', $('#archetype-architect').val());
+        formData.append('description', $('#addArchetypeForm #archetype-description').val());
+        formData.append('rank', parseInt($('#archetype-rank').val(), 10));
+        formData.append('externalLink', $('#archetype-externalLink').val());
+
+        // Get the file from Dropzone
+        if (archetypeIconDropzoneInstance) {
+            const files = archetypeIconDropzoneInstance.getAcceptedFiles();
+            if (files.length > 0) {
+                // Use 'iconFile' to match the expected parameter name in the controller
+                formData.append('iconFile', files[0], files[0].name);
+            }
+            // Note: If no file is added, 'iconFile' will not be appended,
+            // and the controller will receive null for the IFormFile parameter.
+        } else {
+             console.error("Archetype Icon Dropzone instance not found.");
+             // Optionally prevent submission or show an error
+             // return;
+        }
+
+
+        saveArchetypeBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Saving...');
+        toggleLoadingOverlay(true);
+
+        $.ajax({
+            url: urls.createArchetype,
+            type: 'POST',
+            data: formData, // Send FormData
+            processData: false, // Prevent jQuery from processing the data
+            contentType: false, // Prevent jQuery from setting contentType
+            success: function (response) {
+                addArchetypeModal.modal('hide'); // Hide modal on success
+                showToast('success', 'Archetype Added', `Successfully added archetype: ${response.domain || formData.get('domain')}.`); // Use response data if available
+                if (dataTableInstance) {
+                    dataTableInstance.ajax.reload(function() {
+                        if (response && response.id) {
+                            selectArchetype(response.id);
+                        }
+                    }, false);
+                }
+                // Dropzone is reset via the 'hidden.bs.modal' event handler added below
+            },
+            error: function (error) {
+                console.error('Error creating archetype:', error);
+                let errorMsg = 'Failed to add archetype.';
+                if (error.responseJSON && error.responseJSON.title) {
+                    errorMsg += ` ${error.responseJSON.title}`;
+                } else if (error.responseText) {
+                     // Try to parse responseText if it's JSON, otherwise show raw text
+                    try {
+                        const errData = JSON.parse(error.responseText);
+                        errorMsg += ` ${errData.message || errData.title || ''}`;
+                    } catch (e) {
+                        // Limit length of raw error text
+                        errorMsg += ` ${error.responseText.substring(0, 200)}`;
+                    }
+                }
+                showToast('error', 'Save Failed', errorMsg);
+            },
+            complete: function () {
+                saveArchetypeBtn.prop('disabled', false).html('Save Archetype');
+                toggleLoadingOverlay(false);
+            }
+        });
+    } // End of handleSaveArchetype function
 
 
     // --- DataTable Initialization ---
@@ -416,7 +505,7 @@ $(document).ready(function () {
              showToast('error', 'Initialization Failed', 'Cannot load archetypes table. Configuration missing.');
              return; // Don't initialize if URL is missing
         }
-        
+
         dataTableInstance = archetypesTable.DataTable({
             responsive: true,
             processing: true, // Show DataTable's processing indicator
@@ -493,7 +582,7 @@ $(document).ready(function () {
                 // If an archetype was selected, re-highlight its row
                 if (selectedArchetypeId) {
                      dataTableInstance.rows().nodes().to$().removeClass('table-active'); // Clear previous
-                     const selectedRow = dataTableInstance.row(`[data-archetype-id="${selectedArchetypeId}"]`);
+                     const selectedRow = dataTableInstance.row((idx, data, node) => data.id === selectedArchetypeId); // Find row by ID
                      if (selectedRow.any()) {
                          selectedRow.nodes().to$().addClass('table-active');
                      } else {
@@ -501,28 +590,23 @@ $(document).ready(function () {
                          clearArchetypeDetails();
                      }
                 }
+                // Re-attach tooltips if using Bootstrap tooltips
+                $('[data-bs-toggle="tooltip"]').tooltip();
             },
-            // Select first row after initial load if none selected
+            rowCallback: function(row, data) {
+                // Add data attribute for easier selection later
+                $(row).attr('data-archetype-id', data.id);
+            },
             initComplete: function(settings, json) {
-                 if (!selectedArchetypeId && dataTableInstance.rows().count() > 0) {
-                     const firstRowData = dataTableInstance.row(0).data();
-                     if (firstRowData && firstRowData.id) {
-                         selectArchetype(firstRowData.id);
-                     }
-                 } else if (dataTableInstance.rows().count() === 0) {
-                     clearArchetypeDetails(); // Clear details if table is empty
-                 }
+                // Optional: Select the first archetype by default after initial load
+                // if (json && json.length > 0) {
+                //     selectArchetype(json[0].id);
+                // } else {
+                //     clearArchetypeDetails(); // Ensure details are clear if table is empty
+                // }
             }
         });
-
-        // Add listener for DataTables Select extension events (if used)
-        // dataTableInstance.on('select deselect', function () {
-        //     // Update delete button state, etc. based on selection
-        //     const selectedCount = dataTableInstance.rows({ selected: true }).count();
-        //     // Example: $('#delete-selected-btn').prop('disabled', selectedCount === 0);
-        // });
-    }
-
+    } // End of initializeDataTable
 
     // --- Dropzone Initialization ---
     function initializeDropzone() {
@@ -530,97 +614,100 @@ $(document).ready(function () {
              showToast('error', 'Initialization Failed', 'Cannot initialize import. Configuration missing.');
              return; // Don't initialize if URL is missing
         }
-        
-        Dropzone.autoDiscover = false;
+
+        // Check if Dropzone is defined
+        if (typeof Dropzone === 'undefined') {
+            console.error("Dropzone library not loaded.");
+            return;
+        }
+
+        Dropzone.autoDiscover = false; // Prevent Dropzone from automatically attaching
+
         let importDropzoneInstance = new Dropzone("#importDropzone", {
             url: urls.importArchetypes,
-            maxFilesize: 10, // MB
-            maxFiles: 1,
-            acceptedFiles: "application/json,.json",
-            autoProcessQueue: false,
+            autoProcessQueue: false, // Don't upload immediately
+            uploadMultiple: false, // Upload one file at a time
+            acceptedFiles: 'application/json', // Only accept JSON
+            maxFiles: 1, // Only allow one file
             addRemoveLinks: true,
-            paramName: "files", // Match controller parameter
+            dictDefaultMessage: "Drop JSON file here or click to upload",
+            dictRemoveFile: "Remove file",
+            dictMaxFilesExceeded: "You can only upload one file.",
+            dictInvalidFileType: "You can only upload JSON files.",
+            previewsContainer: "#file-previews", // Define the container to display the previews
+            previewTemplate: document.querySelector('#uploadPreviewTemplate').innerHTML, // Define the preview template
             init: function () {
-                let myDropzone = this;
-
                 this.on("addedfile", function (file) {
-                    console.log("File added:", file.name);
-                    if (importSubmitBtn) importSubmitBtn.removeAttribute("disabled");
+                    // Only one file allowed, remove others
+                    if (this.files.length > 1) {
+                        this.removeFile(this.files[0]);
+                    }
+                    // Enable submit button when a valid file is added
+                    if (this.files.length === 1 && this.files[0].status === Dropzone.ADDED) {
+                         importSubmitBtn.disabled = false;
+                    }
                 });
 
                 this.on("removedfile", function (file) {
-                    console.log("File removed:", file.name);
-                    if (myDropzone.files.length === 0 && importSubmitBtn) {
-                        importSubmitBtn.setAttribute("disabled", "disabled");
+                    // Disable submit button if no files are present
+                    if (this.files.length === 0) {
+                        importSubmitBtn.disabled = true;
                     }
                 });
 
-                this.on("processing", function (file) {
-                    console.log("Processing file:", file.name);
-                    // Optionally show spinner on submit button
-                    if (importSubmitBtn) {
-                        importSubmitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Importing...';
-                        importSubmitBtn.setAttribute("disabled", "disabled");
-                    }
+                this.on("error", function (file, message) {
+                    console.error("Dropzone error:", message);
+                    // Show error using toast
+                    showToast('error', 'Upload Error', typeof message === 'string' ? message : 'An error occurred during upload.');
+                    // Optionally remove the file with error
+                    this.removeFile(file);
+                    importSubmitBtn.disabled = true; // Ensure button is disabled on error
+                });
+
+                this.on("sending", function(file, xhr, formData) {
+                    // Add loading state to button
+                    importSubmitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Importing...';
+                    importSubmitBtn.disabled = true;
                 });
 
                 this.on("success", function (file, response) {
-                    console.log("Upload successful:", response);
-                    importModal.modal('hide'); // Close modal
-                    showToast('success', 'Import Successful', response.message || 'Archetypes imported successfully.');
-                    if (dataTableInstance) {
-                        dataTableInstance.ajax.reload(null, false); // Reload table data
-                    }
-                    myDropzone.removeAllFiles(true); // Clear dropzone
-                });
-
-                this.on("error", function (file, errorMessage, xhr) {
-                    console.error("Upload error:", errorMessage, xhr);
-                    let message = "An error occurred during upload.";
-                    if (typeof errorMessage === 'string') {
-                        message = errorMessage;
-                    } else if (xhr && xhr.responseText) {
-                        try {
-                            const responseJson = JSON.parse(xhr.responseText);
-                            message = responseJson.message || xhr.statusText || message;
-                        } catch (e) {
-                            message = xhr.statusText || message;
+                    // Handle success from server
+                    if (response.success) {
+                        showToast('success', 'Import Successful', response.message || 'Archetypes imported successfully.');
+                        importModal.modal('hide'); // Close modal on success
+                        if (dataTableInstance) {
+                            dataTableInstance.ajax.reload(); // Reload DataTable
                         }
-                    } else if (typeof errorMessage === 'object' && errorMessage.message) {
-                         message = errorMessage.message;
+                    } else {
+                        showToast('error', 'Import Failed', response.message || 'Failed to import archetypes.');
                     }
-                    
-                    showToast('error', 'Import Failed', message);
-                    // Optionally remove the failed file: myDropzone.removeFile(file);
+                    this.removeFile(file); // Remove file preview on success
                 });
 
                 this.on("complete", function(file) {
-                     // Reset submit button state after completion (success or error)
-                     if (importSubmitBtn) {
-                         importSubmitBtn.innerHTML = 'Import';
-                         if (myDropzone.files.length > 0) {
-                             importSubmitBtn.removeAttribute("disabled");
-                         } else {
-                              importSubmitBtn.setAttribute("disabled", "disabled");
-                         }
-                     }
+                    // Restore button state regardless of success/error
+                    importSubmitBtn.innerHTML = 'Import';
+                    // Re-enable button only if there's a valid file remaining (shouldn't happen with maxFiles: 1 and auto-removal)
+                    importSubmitBtn.disabled = this.files.length === 0;
                 });
 
-                // Manual trigger for processing queue
-                if (importSubmitBtn) {
-                    importSubmitBtn.addEventListener("click", function (e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        if (myDropzone.getQueuedFiles().length > 0) {
-                            myDropzone.processQueue();
-                        } else {
-                             showToast('info', 'No File', 'Please select a file to import.');
-                        }
-                    });
-                }
+                // Manual trigger for upload
+                importSubmitBtn.addEventListener('click', () => {
+                    if (this.files.length > 0) {
+                        this.processQueue(); // Start upload
+                    } else {
+                        showToast('info', 'No File', 'Please select a file to import.');
+                    }
+                });
+
+                // Clear dropzone when modal is hidden
+                importModal.on('hidden.bs.modal', () => {
+                    this.removeAllFiles(true); // true to cancel uploads
+                    importSubmitBtn.disabled = true; // Reset button state
+                });
             }
         });
-    }
+    } // End of initializeDropzone
 
     // --- Event Listeners ---
 
@@ -671,10 +758,112 @@ $(document).ready(function () {
         }
     });
 
+    // --- Add Archetype Modal Event Listeners ---
+    // console.log("archetype-management.js: Attaching click listener to add button."); // DEBUG REMOVED
+    addArchetypeBtn.on('click', function() {
+        // console.log("archetype-management.js: Add archetype button clicked."); // DEBUG REMOVED
+        addArchetypeForm[0].reset(); // Clear form before showing
+        // console.log("archetype-management.js: Attempting to show modal:", addArchetypeModal); // DEBUG REMOVED
+        addArchetypeModal.modal('show');
+    });
+
+    saveArchetypeBtn.on('click', handleSaveArchetype);
+
+    // Optional: Clear form when modal is hidden
+    // Moved the reset logic to the new combined listener below
+
     // --- Initialization ---
+
+    /**
+     * Initializes the Dropzone instance for the archetype icon upload.
+     */
+    function initializeArchetypeIconDropzone() {
+        // Ensure Dropzone is auto-discovered or manually attach if needed
+        // Dropzone.autoDiscover = false; // Uncomment if you face issues with auto-discovery
+
+        if ($("#archetypeIconDropzone").length > 0 && !archetypeIconDropzoneInstance) {
+            try {
+                archetypeIconDropzoneInstance = new Dropzone("#archetypeIconDropzone", {
+                    url: urls.createArchetype, // Will be overridden by AJAX call, but good practice to set
+                    autoProcessQueue: false,   // We trigger upload manually via AJAX
+                    uploadMultiple: false,     // Only one file
+                    maxFiles: 1,               // Enforce single file
+                    acceptedFiles: 'image/*',  // Accept only images
+                    addRemoveLinks: true,      // Show remove links
+                    previewsContainer: "#archetype-icon-preview", // Set custom preview container
+                    // Simple preview template (adjust as needed)
+                    previewTemplate: `
+                        <div class="dz-preview dz-file-preview">
+                          <div class="dz-image"><img data-dz-thumbnail /></div>
+                          <div class="dz-details">
+                            <div class="dz-size"><span data-dz-size></span></div>
+                            <div class="dz-filename"><span data-dz-name></span></div>
+                          </div>
+                          <div class="dz-progress"><span class="dz-upload" data-dz-uploadprogress></span></div>
+                          <div class="dz-error-message"><span data-dz-errormessage></span></div>
+                          <a class="dz-remove" href="javascript:undefined;" data-dz-remove>Remove file</a>
+                        </div>
+                    `,
+                    init: function () {
+                        this.on("addedfile", function (file) {
+                            // If maxFiles is 1, remove previous file when a new one is added
+                            if (this.files.length > this.options.maxFiles) {
+                                this.removeFile(this.files[0]);
+                            }
+                            // Optional: Show preview container if hidden
+                            $('#archetype-icon-preview').show();
+                        });
+                        this.on("removedfile", function (file) {
+                            // Optional: Hide preview container if empty
+                            if (this.files.length === 0) {
+                                $('#archetype-icon-preview').hide();
+                            }
+                        });
+                        this.on("maxfilesexceeded", function (file) {
+                            this.removeAllFiles();
+                            this.addFile(file); // Add the new file after removing others
+                        });
+                        this.on("error", function(file, message) {
+                            // Handle errors (e.g., invalid file type)
+                            console.error("Dropzone error:", message);
+                            showToast('error', 'Upload Error', typeof message === 'string' ? message : 'Invalid file.');
+                            this.removeFile(file); // Remove the invalid file
+                        });
+                    }
+                });
+                 // Initially hide preview container if empty
+                if (archetypeIconDropzoneInstance.files.length === 0) {
+                    $('#archetype-icon-preview').hide();
+                }
+            } catch (e) {
+                console.error("Failed to initialize Archetype Icon Dropzone:", e);
+                showToast('error', 'Initialization Error', 'Could not initialize image upload.');
+            }
+        } else if ($("#archetypeIconDropzone").length === 0) {
+             console.warn("Archetype Icon Dropzone element (#archetypeIconDropzone) not found.");
+        }
+    }
+
+
+    // --- Event Listeners & Initial Calls ---
+
+    // Reset form AND Dropzone when the Add/Edit modal is hidden
+    addArchetypeModal.on('hidden.bs.modal', function () {
+        addArchetypeForm[0].reset(); // Reset standard form fields
+        // Remove any validation states if necessary
+        $('.is-invalid').removeClass('is-invalid'); // Example: remove Bootstrap validation state
+
+        if (archetypeIconDropzoneInstance) {
+            archetypeIconDropzoneInstance.removeAllFiles(true); // true = silent removal without events
+        }
+         $('#archetype-icon-preview').hide(); // Hide preview on modal close
+    });
+
+    // Initial setup calls
     toggleLoadingOverlay(true); // Show initial loading overlay
     initializeDataTable();
-    initializeDropzone();
+    initializeDropzone(); // For import modal
+    initializeArchetypeIconDropzone(); // For archetype icon
     clearArchetypeDetails(); // Start with a clean details panel
 
 });

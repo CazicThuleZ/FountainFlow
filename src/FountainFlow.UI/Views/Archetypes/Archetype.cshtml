@@ -25,7 +25,7 @@
             <div class="card-body">
                 <div class="row mb-2">
                     <div class="col-sm-5">
-                        <a href="javascript:void(0);" class="btn btn-primary mb-2"><i
+                        <a href="javascript:void(0);" id="add-archetype-btn" class="btn btn-primary mb-2"><i
                                 class="mdi mdi-plus-circle me-2"></i> Add Archetype</a>
                     </div>
                     <div class="col-sm-7">
@@ -212,6 +212,61 @@
         </div>
     </div>
 </div>
+
+<!-- Add Archetype Modal -->
+<div class="modal fade" id="addArchetypeModal" tabindex="-1" role="dialog" aria-labelledby="addArchetypeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="addArchetypeModalLabel">Add New Archetype</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-hidden="true"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addArchetypeForm">
+                    <div class="mb-3">
+                        <label for="archetype-domain" class="form-label">Domain</label>
+                        <input type="text" id="archetype-domain" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="archetype-architect" class="form-label">Architect</label>
+                        <input type="text" id="archetype-architect" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="archetype-description" class="form-label">Description</label>
+                        <textarea class="form-control" id="archetype-description" rows="3" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="archetype-rank" class="form-label">Rank</label>
+                        <input type="number" id="archetype-rank" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Icon (Optional)</label>
+                        <div id="archetypeIconDropzone" class="dropzone">
+                            <div class="fallback">
+                                <input name="iconFile" type="file" accept="image/*" />
+                            </div>
+                            <div class="dz-message needsclick">
+                                <i class="h1 text-muted dripicons-cloud-upload"></i>
+                                <h3>Drop image here or click to upload.</h3>
+                                <span class="text-muted font-13">(Optional, image files only)</span>
+                            </div>
+                        </div>
+                        <!-- Preview container -->
+                        <div class="dropzone-previews mt-1" id="archetype-icon-preview"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="archetype-externalLink" class="form-label">External Link (Optional)</label>
+                        <input type="url" id="archetype-externalLink" class="form-control">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="save-archetype-btn">Save Archetype</button>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
 
 <!-- Toast Container -->
 <div class="position-fixed top-0 end-0 p-3" style="z-index: 1050">
