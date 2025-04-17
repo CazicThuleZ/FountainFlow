@@ -17,4 +17,5 @@ public class ArchetypeViewModel
     public List<ArchetypeViewModel> Archetypes { get; set; }
     public List<GenreViewModel> Genres { get; set; }
     public List<BeatViewModel> Beats { get; set; }
+    public DateTimeOffset CreatedDate { get; set; } // Added for creation date
 }

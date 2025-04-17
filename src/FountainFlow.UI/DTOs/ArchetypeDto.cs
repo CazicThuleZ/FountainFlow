@@ -13,4 +13,5 @@ public class ArchetypeDto
     public int Rank { get; set; }
     public ICollection<Guid> ArchetypeBeatIds { get; set; }
     public ICollection<Guid> ArchetypeGenreIds { get; set; }
+    public DateTime CreatedUTC { get; set; } // Added for creation date
 }

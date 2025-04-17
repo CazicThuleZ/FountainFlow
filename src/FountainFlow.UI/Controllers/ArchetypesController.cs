@@ -423,7 +423,11 @@ namespace FountainFlowUI.Controllers
                 ArchetypeBeatIds = dto.ArchetypeBeatIds,
                 ArchetypeGenreIds = dto.ArchetypeGenreIds,
                 Beats = new List<BeatViewModel>(),
-                Genres = new List<GenreViewModel>()
+                Genres = new List<GenreViewModel>(),
+                // Assuming dto.CreatedUTC is DateTimeKind.Utc or Unspecified but represents UTC
+                CreatedDate = new DateTimeOffset(dto.CreatedUTC.Kind == DateTimeKind.Unspecified
+                                                ? DateTime.SpecifyKind(dto.CreatedUTC, DateTimeKind.Utc)
+                                                : dto.CreatedUTC)
             };
         }
 
